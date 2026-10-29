@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Katropa</title>
+    <style>
+      /* Shown until the game has loaded (React replaces it) */
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: #1b2433;
+        color: #fff;
+        font-family: system-ui, sans-serif;
+        font-size: 18px;
+      }
+      /* If something breaks (for example on a phone), show the error so you can screenshot it */
+      #error-box {
+        display: none;
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        z-index: 99;
+        max-height: 40vh;
+        overflow: auto;
+        padding: 10px 12px;
+        background: #b71c1c;
+        color: #fff;
+        font: 13px/1.4 monospace;
+        border-radius: 8px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"><div class="boot"><b>Katropa</b><span>Loading the street...</span></div></div>
+    <div id="error-box"></div>
+    <script>
+      ;(function () {
+        var box = document.getElementById('error-box')
+        function show(message) {
+          box.style.display = 'block'
+          box.textContent += 'Error: ' + message + '\n'
+        }
+        window.addEventListener('error', function (e) {
+          show(e.message + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''))
+        })
+        window.addEventListener('unhandledrejection', function (e) {
+          show(e.reason && e.reason.message ? e.reason.message : String(e.reason))
+        })
+      })()
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

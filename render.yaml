@@ -1,0 +1,9 @@
+# Render.com setup: one free web service runs the game page AND the multiplayer server.
+services:
+  - type: web
+    name: katropa-server
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /
