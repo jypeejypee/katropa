@@ -42,6 +42,32 @@ for (const mesh of root.listMeshes()) {
   }
 }
 
+// 2b. Mixamo often finds only one finger per hand, which tears the hand when it bends.
+//     Make each hand move as one solid piece: finger bones hand their weight to the hand bone.
+const skin = root.listSkins()[0]
+const joints = skin.listJoints()
+const jointName = (i) => joints[i].getName().replace(/^mixamorig:?/, '')
+const handOf = new Map()
+joints.forEach((joint, i) => {
+  const match = jointName(i).match(/^(Left|Right)Hand(Thumb|Index|Middle|Ring|Pinky)\d$/)
+  if (match) handOf.set(i, joints.findIndex((_, j) => jointName(j) === `${match[1]}Hand`))
+})
+for (const mesh of root.listMeshes()) {
+  for (const prim of mesh.listPrimitives()) {
+    const jointsAttr = prim.getAttribute('JOINTS_0')
+    if (!jointsAttr) continue
+    const array = jointsAttr.getArray().slice()
+    for (let i = 0; i < array.length; i++) if (handOf.has(array[i])) array[i] = handOf.get(array[i])
+    jointsAttr.setArray(array)
+  }
+}
+const fingerBones = new Set([...handOf.keys()].map((i) => joints[i]))
+// The finger bones no longer move anything, so drop their animation too
+for (const animation of root.listAnimations()) {
+  for (const channel of animation.listChannels()) if (fingerBones.has(channel.getTargetNode())) channel.dispose()
+}
+console.log(`Hands: ${handOf.size} finger bones merged into the hands`)
+
 // 3. Copy the other animations onto the same skeleton (bones are matched by name)
 const nodeByName = new Map(root.listNodes().map((n) => [n.getName(), n]))
 for (const name of ANIMATIONS) {
@@ -49,7 +75,7 @@ for (const name of ANIMATIONS) {
   const animation = doc.createAnimation(name)
   for (const channel of source.listChannels()) {
     const target = nodeByName.get(channel.getTargetNode().getName())
-    if (!target) continue
+    if (!target || fingerBones.has(target)) continue
     const path = channel.getTargetPath()
     const isHips = target.getName().endsWith('Hips')
     const sampler = channel.getSampler()
