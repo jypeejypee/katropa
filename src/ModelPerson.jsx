@@ -8,6 +8,7 @@ import { SIT_DROP } from './Person.jsx'
 // Ready-made 3D characters (built with tools/build-character.mjs into public/models)
 export const MODEL_FILES = {
   pinoy: '/models/pinoy.glb',
+  pinay: '/models/pinay.glb',
 }
 
 const HEIGHT = 1.75 // meters, from feet to the top of the head

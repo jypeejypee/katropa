@@ -13,7 +13,7 @@ export const CLOTH_COLORS = [
 ]
 
 export const OPTIONS = {
-  model: ['custom', 'pinoy'], // 'custom' = build your own below; others = ready-made 3D characters
+  model: ['custom', 'pinoy', 'pinay'], // 'custom' = build your own below; others = ready-made 3D characters
   gender: ['male', 'female'],
   build: ['slim', 'average', 'chubby'],
   skin: SKIN_TONES,
@@ -32,7 +32,7 @@ export const OPTIONS = {
 
 // Names shown on the buttons
 export const LABELS = {
-  custom: 'Gawa ko (custom)', pinoy: '3D Pinoy',
+  custom: 'Gawa ko (custom)', pinoy: '3D Pinoy', pinay: '3D Pinay',
   male: 'Lalaki', female: 'Babae',
   slim: 'Slim', average: 'Average', chubby: 'Chubby',
   round: 'Round', happy: 'Happy', sleepy: 'Sleepy', cool: 'Shades',

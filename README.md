@@ -105,8 +105,9 @@ The browser will warn "Your connection is not private": click **Advanced → Pro
 2. Upload it to **mixamo.com**, let it auto-rig, then download these animations as **FBX Binary, 30 fps**
    (first one **With Skin**, the rest **Without Skin**; tick **In Place** for walking and running):
    Idle, Walking, Running, Sitting, Jumping.
-3. Put them in `models/source/` named: `trellis.glb` (the colored model), `idle.fbx`, `walk.fbx`, `run.fbx`, `sit.fbx`, `jump.fbx`.
-4. Run `npm run character`. It makes `public/models/pinoy.glb` (small and phone-friendly).
+3. Make a folder `models/<name>/` (like `models/pinay/`) with: `color.glb` (the colored model), `idle.fbx`, `walk.fbx`, `run.fbx`, `sit.fbx`, `jump.fbx`.
+   For `sit.fbx`, pick a sit **on the floor** (chair sits float in the air).
+4. Run `npm run character -- <name>`. It makes `public/models/<name>.glb` (small and phone-friendly).
 5. For a new name, add it to `MODEL_FILES` in `src/ModelPerson.jsx` and to `model` in `src/avatar.js`.
 
 ## The files (what each one does)

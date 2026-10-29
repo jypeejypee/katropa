@@ -11,7 +11,7 @@
     "dev:lan": "vite --mode lan",
     "lan": "vite build && vite preview --mode lan",
     "start": "node server/index.js",
-    "character": "node tools/convert-fbx.mjs && node tools/build-character.mjs"
+    "character": "node tools/character.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
