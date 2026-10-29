@@ -180,7 +180,9 @@ function MovingVehicle({ index, cars, states }) {
     if (Math.abs(playerPos.x - x) < 1.8 && playerAhead > 0 && playerAhead < half[2] + 5) target = 0
 
     // Wait outside the pickleball court while a game is going on
-    if (getGame().mode === 'pickleball') {
+    // (also when other players in the room are playing on the court)
+    const { mode, pb } = getGame()
+    if (mode === 'pickleball' || mode === 'pickleball2' || (pb && pb.phase !== 'waiting')) {
       const courtEdge = COURT.z - dir * (COURT.halfLength + 1.5)
       const toCourt = (courtEdge - me.z) * dir
       if (toCourt > 0 && toCourt < half[2] + 2) target = 0

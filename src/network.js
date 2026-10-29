@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { playerPos, playerState } from './world.js'
 import { getGame, setGame } from './game.js'
 import { attachVoice } from './voice.js'
+import { timeFromClock } from './timeOfDay.js'
 
 // Where the multiplayer server is. By default it's reached through the game's own address
 // (vite.config.js passes it on to npm run server on port 3001).
@@ -32,14 +33,14 @@ function addPlayer(p) {
   })
 }
 
-export function connect({ name, room, avatar }) {
+export function connect({ name, room, avatar, adminCode }) {
   if (socket) return
   setGame({ online: 'connecting' })
   socket = io(SERVER_URL, { transports: ['websocket'] })
   attachVoice(socket)
 
   socket.on('connect', () => {
-    socket.emit('join', { name, room, avatar })
+    socket.emit('join', { name, room, avatar, adminCode })
     setGame({ online: 'online' })
   })
   socket.on('connect_error', () => setGame({ online: 'offline' }))
@@ -49,8 +50,9 @@ export function connect({ name, room, avatar }) {
     setGame({ online: 'offline' })
   })
 
-  socket.on('welcome', ({ id, players }) => {
+  socket.on('welcome', ({ id, players, name: myName, admin }) => {
     myId = id
+    setGame({ myId: id, admin: !!admin, playerName: myName ?? getGame().playerName })
     remotePlayers.clear()
     players.forEach(addPlayer)
     updateList()
@@ -71,6 +73,28 @@ export function connect({ name, room, avatar }) {
       bubbles: { ...bubbles, [who]: { text: m.text, at: performance.now() } },
     })
   })
+  // Settings for the whole room (the admin can change them)
+  socket.on('settings', (settings) => {
+    const timeSetting = settings.time ?? 'auto'
+    setGame({ timeSetting, time: timeSetting === 'auto' ? timeFromClock() : timeSetting })
+  })
+  socket.on('notice', (text) => toast(text))
+
+  // 2-player pickleball: the server sends the ball and score many times a second
+  socket.on('pb-state', (state) => {
+    pbNet.state = state
+    pbNet.at = performance.now()
+    const old = getGame().pb
+    const key = `${state.phase}|${state.score}|${state.message}|${state.players.map((p) => p.id + p.name)}|${state.server}`
+    if (!old || old.key !== key) setGame({ pb: { ...state, key } })
+  })
+  socket.on('pb-end', ({ text, players }) => {
+    pbNet.state = null
+    const { mode } = getGame()
+    setGame({ pb: null, ...(mode === 'pickleball2' ? { mode: 'walk' } : {}) })
+    if (players.includes(myId) || mode === 'pickleball2') toast(text)
+  })
+
   socket.on('playerLeft', (id) => {
     remotePlayers.delete(id)
     updateList()
@@ -89,6 +113,25 @@ export function connect({ name, room, avatar }) {
       dive: playerState.dive,
     })
   }, SEND_EVERY * 1000)
+}
+
+// The latest 2-player pickleball state from the server (read every frame by Pickleball2P.jsx)
+export const pbNet = { state: null, at: 0 }
+
+export function sendPb(event, data) {
+  if (socket?.connected) socket.emit(event, data)
+}
+
+// Admin only (the server checks): change a setting for everyone in the room
+export function adminSet(changes) {
+  if (socket?.connected) socket.emit('admin-set', changes)
+}
+
+export const isOnline = () => !!socket?.connected
+
+// Short message at the top of the screen for a few seconds
+export function toast(text) {
+  setGame({ toast: { text, at: Date.now() } })
 }
 
 // Send a chat message to everyone in the room

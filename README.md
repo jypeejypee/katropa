@@ -36,8 +36,7 @@ Built with React + React Three Fiber + Rapier (physics).
    - **Space** or **J** to jump, **K** to dive, **C** to sit down / stand up (or tap the JUMP / DIVE / SIT buttons, bottom right)
    - **Drag the mouse** to look around
    - Press **V** to switch between third-person and first-person
-   - The time of day follows your real clock (**🕐 Auto**: day until 3 PM, afternoon 3–6 PM, night after 6 PM).
-     Press **T** or the buttons at the top right to pick **Noon**, **Afternoon** or **Night** yourself; 🕐 goes back to automatic.
+   - The time of day follows the real clock: day until 3 PM, afternoon 3–6 PM, night after 6 PM.
    - You start where photo 2 was taken. Walk up to **Edson** (across the street from Taytay New Life Fellowship, just ahead) and press **E** to talk. Pick an answer with the mouse or keys **1–4**.
 
 ### Playing pickleball with Edson
@@ -111,6 +110,20 @@ The browser will warn "Your connection is not private": click **Advanced → Pro
 4. Run `npm run character -- <name>`. It makes `public/models/<name>.glb` (small and phone-friendly).
 5. For a new name, add it to `MODEL_FILES` in `src/ModelPerson.jsx` and to `model` in `src/avatar.js`.
 
+## Admin (jaypee)
+
+- Type the name **jaypee** on the start screen and an **Admin code** box appears. With the right code you get the **⚙️ Admin** button:
+  change the time of day (Auto / Noon / Afternoon / Night) **for everyone in the room**.
+- The code is checked by the server. Set it on Render: **katropa-server → Environment → Add `ADMIN_CODE`**.
+  On your laptop: `$env:ADMIN_CODE="your-code"; npm run server` (PowerShell).
+- Anyone who types "jaypee" without the right code joins as a Guest.
+
+## Pickleball with a friend (2 players)
+
+Talk to Edson and pick **"Laro tayo, 2 players"**. You wait on the court until a friend in the same room
+talks to Edson and picks **"Sali sa laro ni ..."**. Then you play each other (first to 11, win by 2).
+Everyone else in the room sees the score and can watch. **Q** or **Stop** to quit.
+
 ## The files (what each one does)
 
 | File | What it does |
@@ -135,6 +148,8 @@ The browser will warn "Your connection is not private": click **Advanced → Pro
 | `src/ModelPerson.jsx` | Ready-made 3D characters (GLB + Mixamo animations) |
 | `tools/` | Scripts that turn Mixamo files into one small character file |
 | `src/AcrossTNLF.jsx` | Across from TNLF: the yellow-green house with the gold gate, KTV ROOM and Cuesociety |
+| `server/pickleball.js` | 2-player pickleball: the server moves the ball and keeps score |
+| `src/Pickleball2P.jsx` | Draws the 2-player game and sends your swings |
 | `src/Npc.jsx` | Edson: walks home, looks at you, lets you talk with E |
 | `src/Pickleball.jsx` | The pickleball game: court, net, ball, scoring, how Edson plays (difficulty settings at the top) |
 | `src/Hud.jsx` | Things on the screen: talk prompt, dialogue box, scoreboard |

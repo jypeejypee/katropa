@@ -14,6 +14,7 @@ export const dialogue = {
     text: 'Uy, kapitbahay! Ang init, no? May dala akong paddle at bola. Pickleball tayo dito sa tapat ng TNLF?',
     choices: [
       { label: 'Sige, laro tayo!', action: 'play' },
+      { label: 'Laro tayo, 2 players (kasama ang tropa)', action: 'play2' },
       { label: 'Paano ba laruin?', next: 'howto' },
       { label: 'Ano ba yung pickleball?', next: 'what' },
       { label: 'Mamaya na lang.', next: 'bye' },

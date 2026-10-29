@@ -3,12 +3,22 @@ import { useGame, getGame, setGame } from './game.js'
 import { dialogue, NPC_NAME } from './dialogue.js'
 import { playerState, touchInput } from './world.js'
 import { TIMES, TIME_ORDER, timeFromClock } from './timeOfDay.js'
-import { isTyping, sendChat } from './network.js'
+import { isTyping, sendChat, sendPb, adminSet, isOnline, toast } from './network.js'
 import CharacterCreator from './CharacterCreator.jsx'
 import { startVoice, stopVoice, toggleMute } from './voice.js'
 
 function choose(choice) {
   if (choice.action === 'play') setGame({ mode: 'pickleball', dialogue: null, score: [0, 0], message: '' })
+  else if (choice.action === 'play2') {
+    // Pickleball with a real player: the server opens a game or joins the one that's waiting
+    if (!isOnline()) {
+      setGame({ mode: 'walk', dialogue: null })
+      toast('Kailangan naka-online para makipaglaro sa tropa.')
+      return
+    }
+    sendPb('pb-join')
+    setGame({ mode: 'pickleball2', dialogue: null })
+  }
   else if (choice.action === 'close') setGame({ mode: 'walk', dialogue: null })
   else setGame({ dialogue: choice.next })
 }
@@ -21,7 +31,7 @@ export default function Hud() {
   // Automatic time of day: check the clock every minute
   useEffect(() => {
     const tick = () => {
-      if (getGame().timeAuto && getGame().time !== timeFromClock()) setGame({ time: timeFromClock() })
+      if (getGame().timeSetting === 'auto' && getGame().time !== timeFromClock()) setGame({ time: timeFromClock() })
     }
     const timer = setInterval(tick, 60 * 1000)
     return () => clearInterval(timer)
@@ -31,9 +41,8 @@ export default function Hud() {
   useEffect(() => {
     const onKey = (e) => {
       if (isTyping(e)) return
-      const { mode, nearNpc, dialogue: node, time } = getGame()
+      const { mode, nearNpc, dialogue: node } = getGame()
       if (e.code === 'KeyM') toggleMute()
-      if (e.code === 'KeyT') setGame({ time: TIME_ORDER[(TIME_ORDER.indexOf(time) + 1) % TIME_ORDER.length], timeAuto: false })
       if (mode === 'walk' && nearNpc && e.code === 'KeyE') setGame({ mode: 'talk', dialogue: 'start' })
       if (mode !== 'talk') return
       const choices = dialogue[node].choices
@@ -55,7 +64,7 @@ export default function Hud() {
 
       {game.mode === 'walk' && (
         <div className="help">
-          WASD / Arrows to walk · Shift to run · Space or J to jump · K to dive · C to sit · Drag mouse to look around · V for first-person · T for time of day
+          WASD / Arrows to walk · Shift to run · Space or J to jump · K to dive · C to sit · Drag mouse to look around · V for first-person
         </div>
       )}
 
@@ -83,27 +92,16 @@ export default function Hud() {
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => choose(choice)}
               >
-                <span className="key">{i + 1}</span> {choice.label}
+                <span className="key">{i + 1}</span> {choiceLabel(choice, game)}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {game.mode !== 'start' && (
-      <div className="time-buttons">
-        <button tabIndex={-1} className={game.timeAuto ? 'active' : ''} onMouseDown={(e) => e.preventDefault()}
-          onClick={() => setGame({ timeAuto: true, time: timeFromClock() })}>
-          {game.touch ? '🕐' : '🕐 Auto'}
-        </button>
-        {TIME_ORDER.map((name) => (
-          <button key={name} tabIndex={-1} className={!game.timeAuto && game.time === name ? 'active' : ''}
-            onMouseDown={(e) => e.preventDefault()} onClick={() => setGame({ time: name, timeAuto: false })}>
-            {game.touch ? TIMES[name].label.split(' ')[0] : TIMES[name].label}
-          </button>
-        ))}
-      </div>
-      )}
+      {game.mode !== 'start' && game.admin && <AdminPanel game={game} />}
+      {game.toast && <Toast toast={game.toast} />}
+      {game.pb && game.mode !== 'pickleball2' && game.mode !== 'start' && <CourtBanner pb={game.pb} />}
 
       {game.mode !== 'talk' && game.mode !== 'start' && (
         <div className="action-buttons">
@@ -118,7 +116,7 @@ export default function Hud() {
               SIT<small>C</small>
             </button>
           )}
-          {game.mode === 'pickleball' && (
+          {(game.mode === 'pickleball' || game.mode === 'pickleball2') && (
             <button className="hit-button" tabIndex={-1} onPointerDown={(e) => { e.preventDefault(); playerState.hitRequest = true }}>
               HIT<small>Space</small>
             </button>
@@ -134,6 +132,9 @@ export default function Hud() {
             <button tabIndex={-1} onPointerDown={(e) => { e.preventDefault(); setGame({ mode: 'talk', dialogue: 'quit', message: '' }) }}>
               Stop
             </button>
+          )}
+          {game.mode === 'pickleball2' && (
+            <button tabIndex={-1} onPointerDown={(e) => { e.preventDefault(); leaveMatch() }}>Stop</button>
           )}
         </div>
       )}
@@ -153,6 +154,8 @@ export default function Hud() {
           </div>
         </>
       )}
+
+      {game.mode === 'pickleball2' && <MatchHud game={game} />}
     </>
   )
 }
@@ -316,6 +319,92 @@ function Joystick() {
       onPointerCancel={release}
     >
       <div ref={knob} className="joystick-knob" />
+    </div>
+  )
+}
+
+// The 2-player choice in Edson's menu shows who is waiting for a kalaro
+function choiceLabel(choice, game) {
+  if (choice.action !== 'play2') return choice.label
+  const pb = game.pb
+  if (pb?.phase === 'waiting' && pb.players[0]?.id !== game.myId) return `Sali sa laro ni ${pb.players[0].name}! 🏓`
+  if (pb && pb.phase !== 'waiting') return `${choice.label} (may naglalaro pa)`
+  return choice.label
+}
+
+function leaveMatch() {
+  sendPb('pb-leave')
+  setGame({ mode: 'walk' })
+}
+
+// Scoreboard and messages during a 2-player game
+function MatchHud({ game }) {
+  const pb = game.pb
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!isTyping(e) && e.code === 'KeyQ') leaveMatch()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  if (!pb) return <div className="game-message">Kumokonekta...</div>
+  const [a, b] = pb.players
+  const label = (p) => (!p ? '...' : p.id === game.myId ? 'Ikaw' : p.name)
+  return (
+    <>
+      <div className="scoreboard">
+        <span>{label(a)}</span>
+        <b>{pb.score[0]}</b>
+        <span className="dash">–</span>
+        <b>{pb.score[1]}</b>
+        <span>{label(b)}</span>
+      </div>
+      {pb.message && <div className="game-message">{pb.message}</div>}
+      <div className="help">SPACE to hit · Hold A / D while hitting to aim · W deep · S short · K dive · Q to stop</div>
+    </>
+  )
+}
+
+// For everyone else in the room: who is playing, or who is waiting for a kalaro
+function CourtBanner({ pb }) {
+  const [a, b] = pb.players
+  const text = pb.phase === 'waiting'
+    ? `🏓 Naghihintay ng kalaro si ${a?.name}! Kausapin si ${NPC_NAME} para sumali.`
+    : `🏓 ${a?.name} ${pb.score[0]} – ${pb.score[1]} ${b?.name}`
+  return <div className="court-banner">{text}</div>
+}
+
+// Short message at the top for a few seconds
+function Toast({ toast: t }) {
+  const [, redraw] = useState(0)
+  useEffect(() => {
+    const timer = setTimeout(() => redraw((n) => n + 1), 5000)
+    return () => clearTimeout(timer)
+  }, [t])
+  if (Date.now() - t.at > 5000) return null
+  return <div className="toast">{t.text}</div>
+}
+
+// Only for the admin (jaypee): settings that change the game for everyone in the room
+function AdminPanel({ game }) {
+  const [open, setOpen] = useState(false)
+  const keep = (e) => e.preventDefault()
+  return (
+    <div className="admin-panel">
+      <button tabIndex={-1} onMouseDown={keep} onClick={() => setOpen(!open)}>⚙️ Admin</button>
+      {open && (
+        <div className="admin-body">
+          <div className="admin-title">Oras ng araw (para sa lahat)</div>
+          <div className="admin-row">
+            {['auto', ...TIME_ORDER].map((t) => (
+              <button key={t} tabIndex={-1} onMouseDown={keep} className={game.timeSetting === t ? 'active' : ''}
+                onClick={() => adminSet({ time: t })}>
+                {t === 'auto' ? '🕐 Auto' : TIMES[t].label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

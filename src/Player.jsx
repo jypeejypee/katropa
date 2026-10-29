@@ -108,13 +108,13 @@ export default function Player() {
 
     // The pickleball game can move the player onto the court
     if (playerState.teleport) {
-      const [x, y, z] = playerState.teleport
+      const [x, y, z, yaw = 0] = playerState.teleport
       body.current.setTranslation({ x, y, z }, true)
       body.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
-      v.yaw = 0
+      v.yaw = yaw // which way to face: 0 = toward the far end of the street
       v.pitch = 0.3
       v.firstPerson = false
-      model.current.rotation.y = Math.PI
+      model.current.rotation.y = Math.PI + yaw
       playerState.teleport = null
     }
 
@@ -219,7 +219,7 @@ export default function Player() {
 
     // 4. Arms and legs (and the paddle swing during pickleball)
     const swing = t < playerState.swingUntil ? 1 - (playerState.swingUntil - t) / SWING_TIME : -1
-    paddle.current.visible = mode === 'pickleball'
+    if (paddle.current) paddle.current.visible = mode === 'pickleball' || mode === 'pickleball2'
     // Knees and elbows bend; sitting is mahinhin for Babae characters
     animatePerson(limbs, state.clock.elapsedTime, moving && !diving && grounded, speed, swing, s.amount,
       getGame().avatar.gender === 'female')

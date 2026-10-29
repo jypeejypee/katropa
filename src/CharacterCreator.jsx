@@ -28,6 +28,8 @@ function loadSaved() {
 export default function CharacterCreator() {
   const saved = loadSaved()
   const [name, setName] = useState(saved.name ?? '')
+  const [adminCode, setAdminCode] = useState('') // never saved in the browser
+  const isAdminName = name.trim().toLowerCase() === 'jaypee'
   const [room, setRoom] = useState(saved.room ?? 'tnlf')
   const [quality, setQuality] = useState(saved.quality ?? getGame().quality)
   const [avatar, setAvatar] = useState(saved.avatar ? sanitizeAvatar(saved.avatar) : DEFAULT_AVATAR)
@@ -47,7 +49,7 @@ export default function CharacterCreator() {
       // private window: just don't remember it
     }
     setGame({ mode: 'walk', playerName: player.name, room: player.room, quality, avatar })
-    connect(player)
+    connect({ ...player, adminCode: isAdminName ? adminCode : undefined })
   }
 
   return (
@@ -69,6 +71,10 @@ export default function CharacterCreator() {
           <p className="tagline">Tambay, laro at kwentuhan kasama ang tropa</p>
           <input className="name-input" value={name} maxLength={16} placeholder="Pangalan mo (your name)"
             onChange={(e) => setName(e.target.value)} />
+          {isAdminName && (
+            <input type="password" value={adminCode} placeholder="Admin code" autoComplete="current-password"
+              onChange={(e) => setAdminCode(e.target.value)} />
+          )}
 
           <div className="tabs">
             {TABS.map((t, i) => (

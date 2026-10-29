@@ -46,10 +46,4 @@ export const npcPos = new THREE.Vector3(5.2, 0, -22) // same as NPC_HOME in dial
 export const npcState = { swingUntil: 0, facing: Math.PI, moving: false }
 
 // ---------- Pickleball court (painted on the road during a game) ----------
-export const COURT = {
-  z: -22, // where the net is: in front of Taytay New Life Fellowship
-  halfLength: 6.7, // a real court is 13.4 m long
-  halfWidth: 3.05, // and 6.1 m wide
-  kitchen: 2.13, // the "kitchen" line, 2.13 m from the net
-  netHeight: 0.9,
-}
+export { COURT } from './court.js'

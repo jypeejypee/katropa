@@ -19,7 +19,11 @@ let state = {
   score: [0, 0], // [you, Edson]
   message: '',
   time: timeFromClock(), // 'noon', 'afternoon' or 'night' (see timeOfDay.js)
-  timeAuto: true, // follow the real clock (the 🕐 Auto button)
+  timeSetting: 'auto', // 'auto' follows the real clock; only the admin can change it (for the whole room)
+  admin: false, // true for jaypee with the right admin code (checked by the server)
+  myId: null,
+  pb: null, // 2-player pickleball game in this room (from the server)
+  toast: null, // { text, at } short message at the top of the screen
   playerName: '',
   avatar: DEFAULT_AVATAR, // your character's look (see avatar.js)
   room: 'tnlf',

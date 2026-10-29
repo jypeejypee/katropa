@@ -310,7 +310,7 @@ function Line({ x, z, w, l }) {
 }
 
 // Chalk lines on the road
-function CourtLines() {
+export function CourtLines() {
   const W = 0.07
   return (
     <>
@@ -328,7 +328,7 @@ function CourtLines() {
 }
 
 // Portable net across the road
-function Net() {
+export function Net() {
   const width = HALF_W * 2 + 0.6
   return (
     <>

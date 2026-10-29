@@ -6,6 +6,7 @@ import Street from './Street.jsx'
 import Player from './Player.jsx'
 import Npc from './Npc.jsx'
 import Pickleball from './Pickleball.jsx'
+import Pickleball2P from './Pickleball2P.jsx'
 import Hud from './Hud.jsx'
 import RemotePlayers from './RemotePlayers.jsx'
 import NightLights from './NightLights.jsx'
@@ -52,7 +53,7 @@ function Sun({ time, low }) {
 }
 
 export default function App() {
-  const { mode, time: timeName, touch, quality } = useGame()
+  const { mode, time: timeName, touch, quality, pb } = useGame()
   const low = quality === 'low'
   useEffect(() => {
     document.body.classList.toggle('touch', touch)
@@ -81,6 +82,9 @@ export default function App() {
             <Player />
             <Npc />
             {mode === 'pickleball' && <Pickleball />}
+            {mode === 'pickleball2' && <Pickleball2P />}
+            {/* Watching other players' game */}
+            {mode !== 'pickleball2' && mode !== 'pickleball' && pb && pb.phase !== 'waiting' && <Pickleball2P playing={false} />}
           </Physics>
           <RemotePlayers />
         </Canvas>
