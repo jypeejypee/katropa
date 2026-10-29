@@ -5,6 +5,15 @@
 // ============================================================
 export const TIME_ORDER = ['noon', 'afternoon', 'night']
 
+// Automatic: follows the clock on the player's phone or computer
+//   6:00 AM - 2:59 PM = noon (daytime), 3:00 PM - 5:59 PM = afternoon, 6:00 PM - 5:59 AM = night
+export function timeFromClock(date = new Date()) {
+  const hour = date.getHours()
+  if (hour >= 6 && hour < 15) return 'noon'
+  if (hour >= 15 && hour < 18) return 'afternoon'
+  return 'night'
+}
+
 export const TIMES = {
   noon: {
     label: '☀️ Noon',

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useGame, getGame, setGame } from './game.js'
 import { dialogue, NPC_NAME } from './dialogue.js'
 import { playerState, touchInput } from './world.js'
-import { TIMES, TIME_ORDER } from './timeOfDay.js'
+import { TIMES, TIME_ORDER, timeFromClock } from './timeOfDay.js'
 import { isTyping, sendChat } from './network.js'
 import CharacterCreator from './CharacterCreator.jsx'
 import { startVoice, stopVoice, toggleMute } from './voice.js'
@@ -18,13 +18,22 @@ export default function Hud() {
   const game = useGame()
   const line = game.mode === 'talk' ? dialogue[game.dialogue] : null
 
+  // Automatic time of day: check the clock every minute
+  useEffect(() => {
+    const tick = () => {
+      if (getGame().timeAuto && getGame().time !== timeFromClock()) setGame({ time: timeFromClock() })
+    }
+    const timer = setInterval(tick, 60 * 1000)
+    return () => clearInterval(timer)
+  }, [])
+
   // Keyboard: E to talk, 1-4 to pick an answer, Esc to stop talking
   useEffect(() => {
     const onKey = (e) => {
       if (isTyping(e)) return
       const { mode, nearNpc, dialogue: node, time } = getGame()
       if (e.code === 'KeyM') toggleMute()
-      if (e.code === 'KeyT') setGame({ time: TIME_ORDER[(TIME_ORDER.indexOf(time) + 1) % TIME_ORDER.length] })
+      if (e.code === 'KeyT') setGame({ time: TIME_ORDER[(TIME_ORDER.indexOf(time) + 1) % TIME_ORDER.length], timeAuto: false })
       if (mode === 'walk' && nearNpc && e.code === 'KeyE') setGame({ mode: 'talk', dialogue: 'start' })
       if (mode !== 'talk') return
       const choices = dialogue[node].choices
@@ -83,9 +92,13 @@ export default function Hud() {
 
       {game.mode !== 'start' && (
       <div className="time-buttons">
+        <button tabIndex={-1} className={game.timeAuto ? 'active' : ''} onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setGame({ timeAuto: true, time: timeFromClock() })}>
+          {game.touch ? '🕐' : '🕐 Auto'}
+        </button>
         {TIME_ORDER.map((name) => (
-          <button key={name} tabIndex={-1} className={game.time === name ? 'active' : ''}
-            onMouseDown={(e) => e.preventDefault()} onClick={() => setGame({ time: name })}>
+          <button key={name} tabIndex={-1} className={!game.timeAuto && game.time === name ? 'active' : ''}
+            onMouseDown={(e) => e.preventDefault()} onClick={() => setGame({ time: name, timeAuto: false })}>
             {game.touch ? TIMES[name].label.split(' ')[0] : TIMES[name].label}
           </button>
         ))}

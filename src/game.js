@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { DEFAULT_AVATAR } from './avatar.js'
+import { timeFromClock } from './timeOfDay.js'
 
 // The game "mode" and what the screen should show.
 //   mode: 'start' (typing your name), 'walk' (walking around), 'talk' (talking to Edson), 'pickleball' (playing)
@@ -17,7 +18,8 @@ let state = {
   dialogue: null, // which line of dialogue.js is showing
   score: [0, 0], // [you, Edson]
   message: '',
-  time: 'noon', // 'noon', 'afternoon' or 'night' (see timeOfDay.js)
+  time: timeFromClock(), // 'noon', 'afternoon' or 'night' (see timeOfDay.js)
+  timeAuto: true, // follow the real clock (the 🕐 Auto button)
   playerName: '',
   avatar: DEFAULT_AVATAR, // your character's look (see avatar.js)
   room: 'tnlf',

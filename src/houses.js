@@ -9,7 +9,7 @@
 //
 //  z 40 to 100  = photo 1 (big trees, tricycles, KALIDAD, Fries Burger, café)
 //  z -14 to 40  = left of TNLF: EGB and shops, Margie 2 sari-sari, badminton COURT, white house (NearTNLF.jsx)
-//  z -15 to -50 = photo 2 (Taytay New Life Fellowship with bamboo, yellow-green house, KTV, PEYSON)
+//  z -15 to -50 = photo 2 (TNLF; across: Polystar, Cuesociety/KTV house, froyo shop, Reyson Wood)
 //                 The pickleball court is on the road in front of New Life Fellowship (see world.js)
 // ============================================================
 
@@ -78,15 +78,13 @@ export const buildings = [
   { side: 'right', z: 15, width: 10, floors: 2, wallColor: '#f1e3c8', trimColor: '#a0522d', roof: 'hip', front: 'gate' },
   { side: 'right', z: 5.5, width: 9, floors: 2, wallColor: '#dfe6e9', front: 'shutter', awning: '#3c6e9e' },
   { side: 'right', z: -3.5, width: 9, floors: 1, wallColor: '#e0d6c6', roof: 'tin', front: 'store' },
-  { side: 'right', z: -12.5, width: 9, floors: 2, wallColor: '#ece4d4', front: 'gate' },
-  // Photo 2
-  { side: 'right', z: -24, width: 14, floors: 2, wallColor: '#dfe190', trimColor: '#a8503e', roof: 'hip',
-    roofColor: '#cf8a68', gable: true, front: 'gate', awning: { color: '#cdc59a', style: 'barrel' } },
-  { side: 'right', z: -33.5, width: 4, floors: 1, wallColor: '#e2d3b8', pillars: '#c9a77c', front: 'store',
-    awning: '#2f8a57', stairs: 0.4 },
-  { side: 'right', z: -37.5, width: 3, floors: 1, wallColor: '#e7dcc6', front: 'shutter', stairs: 0.6 },
-  { side: 'right', z: -44, width: 9, floors: 1, wallColor: '#6f8f8a', front: 'stripes',
-    sign: { text: 'PEYSON HOUSE', bg: '#ffffff', fg: '#263238', width: 2, height: 0.55, y: 2.4 } },
+  // Across from TNLF (from the photos). The yellow-green house with KTV and Cuesociety is in AcrossTNLF.jsx (z -36 to -14)
+  { side: 'right', z: -11, width: 6, height: 3.2, wallColor: '#e9e7e1', roof: 'tin', front: 'glass', awning: '#2f6fc4',
+    sign: { text: 'POLYSTAR GLASS\n& ALUMINUM INC.', bg: '#ffffff', fg: '#1f4fa8', width: 3.2, height: 0.9, y: 1.0 } },
+  { side: 'right', z: -39, width: 6, height: 3.4, wallColor: '#e8e2d2', pillars: '#f3eee3', front: 'glass', stairs: 0.6,
+    awning: '#2e8b57', sign: { text: 'FROZEN YOGURT · CROFFLES · SMOOTHIES', bg: '#efe9dc', fg: '#7a6a55', width: 4.6, height: 0.32, y: 3.05 } },
+  { side: 'right', z: -45.25, width: 6.5, height: 3.2, wallColor: '#5f7f86', front: 'stripes',
+    sign: { text: 'REYSON WOOD\nEnterprises Co.\nDealer of Good Lumber', bg: '#ffffff', fg: '#263238', width: 3, height: 1.0, y: 2.55 } },
   { side: 'right', z: -55, width: 13, floors: 2, wallColor: '#e8d9c0', trimColor: '#8c4a3a', roof: 'hip',
     roofColor: '#9a4b3a', front: 'shutter', awning: '#3c6e9e' },
   { side: 'right', z: -67, width: 12, floors: 2, wallColor: '#ecdcb0', trimColor: '#8b4a3c', roof: 'hip', front: 'gate' },
@@ -126,7 +124,7 @@ export const streetLamps = [
   { x: 4.7, z: 62 },
   // Lights for the pickleball court in front of TNLF at night
   { x: 4.7, z: -27 },
-  { x: 4.7, z: -16, solar: false }, // on the electric post in front of the yellow-green house
+  { x: 4.7, z: -16, solar: false }, // on the electric post in front of Cuesociety
   { x: -5.9, z: -24.4, solar: false }, // on the pink-and-green post in front of TNLF
   { x: -4.6, z: -58, solar: false },
 ]
@@ -136,10 +134,9 @@ export const signs = [
   // Tall KALIDAD sign standing on the sidewalk
   { position: [5.4, 2.0, 84], size: [0.8, 3], text: 'KALIDAD', bg: '#2a1d24', fg: '#ffffff', vertical: true, posts: true },
   // Banners on the yellow-green house
-  { position: [6.4, 1.7, -19.5], rotation: -Math.PI / 2, size: [1.5, 1.0], text: 'KTV ROOM', bg: '#1d2340', fg: '#ffffff' },
-  { position: [6.4, 1.5, -22.3], rotation: -Math.PI / 2, size: [0.9, 2.0], text: 'STANDARD\nTOWERS\nPREMIUM\nTOWERS', bg: '#1d2340', fg: '#ffffff' },
-  { position: [6.4, 1.5, -24.6], rotation: -Math.PI / 2, size: [0.95, 2.1], text: 'RICE MEAL\n+ 2 RICE', bg: '#1d2340', fg: '#ffffff' },
   // Yellow TAKOYAKI sign next to the alley of New Life Fellowship
+  // Posters at the froyo shop
+  { position: [6.4, 1.4, -37.3], rotation: -Math.PI / 2, size: [0.7, 1.1], text: 'PRINT\nXEROX\nSCAN', bg: '#1565c0', fg: '#ffffff' },
   { position: [-5.3, 1.5, -33.5], size: [0.45, 2.0], text: 'TAKOYAKI', bg: '#ffd23f', fg: '#1b1b1b', vertical: true, posts: true },
 ]
 

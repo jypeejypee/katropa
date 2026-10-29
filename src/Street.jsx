@@ -3,6 +3,7 @@ import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import StaticBatch from './StaticBatch.jsx'
 import NewLifeFellowship from './NewLifeFellowship.jsx'
 import NearTNLF from './NearTNLF.jsx'
+import AcrossTNLF from './AcrossTNLF.jsx'
 import Building from './Building.jsx'
 import { Tree, PowerLines, StreetLamp, Sign, PottedPlant, Planter, PipeFrame, Bucket } from './Props.jsx'
 import { ParkedVehicle, Traffic } from './Vehicles.jsx'
@@ -91,6 +92,7 @@ export default memo(function Street() {
         {buildings.map((b, i) => <Building key={i} {...b} />)}
         <NewLifeFellowship {...newLifeFellowship} />
         <NearTNLF />
+        <AcrossTNLF />
         {trees.map((t, i) => <Tree key={i} seed={i + 1} {...t} />)}
         <PowerLines lines={powerLines} />
         {streetLamps.map((l, i) => <StreetLamp key={i} {...l} />)}

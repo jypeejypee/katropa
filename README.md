@@ -36,7 +36,8 @@ Built with React + React Three Fiber + Rapier (physics).
    - **Space** or **J** to jump, **K** to dive, **C** to sit down / stand up (or tap the JUMP / DIVE / SIT buttons, bottom right)
    - **Drag the mouse** to look around
    - Press **V** to switch between third-person and first-person
-   - Press **T** (or the buttons at the top right) to switch between **Noon**, **Afternoon** and **Night**
+   - The time of day follows your real clock (**🕐 Auto**: day until 3 PM, afternoon 3–6 PM, night after 6 PM).
+     Press **T** or the buttons at the top right to pick **Noon**, **Afternoon** or **Night** yourself; 🕐 goes back to automatic.
    - You start where photo 2 was taken. Walk up to **Edson** (across the street from Taytay New Life Fellowship, just ahead) and press **E** to talk. Pick an answer with the mouse or keys **1–4**.
 
 ### Playing pickleball with Edson
@@ -133,6 +134,7 @@ The browser will warn "Your connection is not private": click **Advanced → Pro
 | `src/NearTNLF.jsx` | Left of TNLF: EGB and the shop row, Margie 2 Sari-Sari Store, the badminton COURT, the white house |
 | `src/ModelPerson.jsx` | Ready-made 3D characters (GLB + Mixamo animations) |
 | `tools/` | Scripts that turn Mixamo files into one small character file |
+| `src/AcrossTNLF.jsx` | Across from TNLF: the yellow-green house with the gold gate, KTV ROOM and Cuesociety |
 | `src/Npc.jsx` | Edson: walks home, looks at you, lets you talk with E |
 | `src/Pickleball.jsx` | The pickleball game: court, net, ball, scoring, how Edson plays (difficulty settings at the top) |
 | `src/Hud.jsx` | Things on the screen: talk prompt, dialogue box, scoreboard |
