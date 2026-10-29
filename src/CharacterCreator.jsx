@@ -4,11 +4,11 @@ import { OrbitControls } from '@react-three/drei'
 import { getGame, setGame } from './game.js'
 import { connect } from './network.js'
 import { Person } from './Person.jsx'
-import { OPTIONS, LABELS, DEFAULT_AVATAR, sanitizeAvatar, randomAvatar } from './avatar.js'
+import { OPTIONS, LABELS, DEFAULT_AVATAR, GENDER_PRESETS, sanitizeAvatar, randomAvatar } from './avatar.js'
 
 // The tabs of the character creator and which choices are on each
 const TABS = [
-  { name: 'Katawan', rows: [['build', 'Body'], ['skin', 'Skin']] },
+  { name: 'Katawan', rows: [['gender', 'Lalaki o Babae'], ['build', 'Body'], ['skin', 'Skin']] },
   { name: 'Mukha', rows: [['eyes', 'Eyes'], ['eyeColor', 'Eye color']] },
   { name: 'Buhok', rows: [['hairStyle', 'Hair style'], ['hairColor', 'Hair color']] },
   { name: 'Damit', rows: [['top', 'Top'], ['topColor', 'Top color'], ['bottom', 'Bottom'], ['bottomColor', 'Bottom color']] },
@@ -33,7 +33,9 @@ export default function CharacterCreator() {
   const [avatar, setAvatar] = useState(saved.avatar ? sanitizeAvatar(saved.avatar) : DEFAULT_AVATAR)
   const [tab, setTab] = useState(0)
   const ready = name.trim().length > 0
-  const change = (key, value) => setAvatar((a) => ({ ...a, [key]: value }))
+  // Picking Lalaki or Babae also switches to a matching hair and outfit (you can change them after)
+  const change = (key, value) =>
+    setAvatar((a) => (key === 'gender' && value !== a.gender ? { ...a, ...GENDER_PRESETS[value] } : { ...a, [key]: value }))
 
   const start = (e) => {
     e.preventDefault()
@@ -52,12 +54,12 @@ export default function CharacterCreator() {
     <div className="start-screen">
       <form className="creator" onSubmit={start}>
         <div className="creator-preview">
-          <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0.1, 4.1], fov: 34 }}>
+          <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0.0, 4.4], fov: 34 }}>
             <hemisphereLight args={['#dbeeff', '#6b5a48', 1.3]} />
             <directionalLight position={[2, 3, 4]} intensity={2.2} />
             <PreviewModel avatar={avatar} />
             <OrbitControls enablePan={false} enableZoom={false} autoRotate autoRotateSpeed={1.6}
-              target={[0, 0.1, 0]} minPolarAngle={1.2} maxPolarAngle={1.75} />
+              target={[0, 0.0, 0]} minPolarAngle={1.2} maxPolarAngle={1.75} />
           </Canvas>
           <button type="button" className="random-button" onClick={() => setAvatar(randomAvatar())}>🎲 Random</button>
         </div>

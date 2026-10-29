@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { playerPos, playerState, npcPos, now, lerpAngle, touchInput } from './world.js'
 import { getGame, useGame } from './game.js'
 import { isTyping } from './network.js'
-import { Person, animatePerson } from './Person.jsx'
+import { Person, animatePerson, SIT_DROP } from './Person.jsx'
 import SpeechBubble from './SpeechBubble.jsx'
 
 const WALK_SPEED = 3
@@ -193,7 +193,7 @@ export default function Player() {
       tilt.current.position.y = -lean * 0.62
     } else {
       tilt.current.rotation.x = 0
-      tilt.current.position.y = -0.58 * s.amount // lower the body to the ground when sitting
+      tilt.current.position.y = -SIT_DROP * s.amount // lower the body to the ground when sitting
       if (moving) {
         direction.multiplyScalar(speed)
         // 2. Turn the character to face where it's walking
@@ -218,12 +218,9 @@ export default function Player() {
     // 4. Arms and legs (and the paddle swing during pickleball)
     const swing = t < playerState.swingUntil ? 1 - (playerState.swingUntil - t) / SWING_TIME : -1
     paddle.current.visible = mode === 'pickleball'
-    animatePerson(limbs, state.clock.elapsedTime, moving && !diving && grounded, speed, swing)
-    if (s.amount > 0.01) {
-      // Sitting pose: legs stretched out in front, hands resting on the ground behind
-      limbs.current.legs.forEach((leg) => (leg.rotation.x = -1.5 * s.amount))
-      limbs.current.arms.forEach((arm) => (arm.rotation.x = 0.35 * s.amount))
-    }
+    // Knees and elbows bend; sitting is mahinhin for Babae characters
+    animatePerson(limbs, state.clock.elapsedTime, moving && !diving && grounded, speed, swing, s.amount,
+      getGame().avatar.gender === 'female')
 
     // 5. Camera
     model.current.visible = !v.firstPerson

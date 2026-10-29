@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGame } from './game.js'
 import { remotePlayers } from './network.js'
-import { Person, animatePerson } from './Person.jsx'
+import { Person, animatePerson, SIT_DROP } from './Person.jsx'
 import { lerpAngle, playerPos } from './world.js'
 import { setPeerVolume } from './voice.js'
 import { signTexture } from './textures.js'
@@ -45,12 +45,8 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
 
     // Same poses as your own character: diving and sitting
     tilt.current.rotation.x = t.dive * 1.45
-    tilt.current.position.y = -t.dive * 0.62 - 0.58 * t.sit
-    animatePerson(limbs, state.clock.elapsedTime, t.moving, 3)
-    if (t.sit > 0.01) {
-      limbs.current.legs.forEach((leg) => (leg.rotation.x = -1.5 * t.sit))
-      limbs.current.arms.forEach((arm) => (arm.rotation.x = 0.35 * t.sit))
-    }
+    tilt.current.position.y = -t.dive * 0.62 - SIT_DROP * t.sit
+    animatePerson(limbs, state.clock.elapsedTime, t.moving, 3, -1, t.sit, avatar?.gender === 'female')
   })
 
   return (
