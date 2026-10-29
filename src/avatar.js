@@ -13,6 +13,7 @@ export const CLOTH_COLORS = [
 ]
 
 export const OPTIONS = {
+  model: ['custom', 'pinoy'], // 'custom' = build your own below; others = ready-made 3D characters
   gender: ['male', 'female'],
   build: ['slim', 'average', 'chubby'],
   skin: SKIN_TONES,
@@ -31,6 +32,7 @@ export const OPTIONS = {
 
 // Names shown on the buttons
 export const LABELS = {
+  custom: 'Gawa ko (custom)', pinoy: '3D Pinoy',
   male: 'Lalaki', female: 'Babae',
   slim: 'Slim', average: 'Average', chubby: 'Chubby',
   round: 'Round', happy: 'Happy', sleepy: 'Sleepy', cool: 'Shades',
@@ -55,6 +57,7 @@ export const GENDER_PRESETS = {
 }
 
 export const DEFAULT_AVATAR = {
+  model: 'custom',
   build: 'average', skin: '#e0ac7e',
   eyes: 'round', eyeColor: '#3b2416',
   hairColor: '#3b2416',
@@ -64,6 +67,7 @@ export const DEFAULT_AVATAR = {
 
 // Edson's look
 export const EDSON_AVATAR = {
+  model: 'custom',
   gender: 'male', build: 'chubby', skin: '#b07a52',
   eyes: 'round', eyeColor: '#24160c',
   hairStyle: 'curly', hairColor: '#1a1410',
@@ -89,6 +93,7 @@ export function randomAvatar() {
   const avatar = {}
   for (const [key, allowed] of Object.entries(OPTIONS)) avatar[key] = pick(allowed)
   avatar.gender = gender
+  avatar.model = 'custom'
   // Mostly typical choices for each, so random looks are nice
   avatar.hairStyle = pick(female ? ['bob', 'long', 'ponytail', 'bun', 'curly'] : ['short', 'sidepart', 'curly', 'spiky', 'bald'])
   avatar.top = pick(female ? ['blouse', 'tshirt', 'polo', 'hoodie', 'longsleeve'] : ['longsleeve', 'polo', 'tshirt', 'hoodie', 'tank'])

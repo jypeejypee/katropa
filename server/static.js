@@ -15,6 +15,7 @@ const TYPES = {
   '.jpg': 'image/jpeg',
   '.ico': 'image/x-icon',
   '.wasm': 'application/wasm',
+  '.glb': 'model/gltf-binary',
   '.webmanifest': 'application/manifest+json',
 }
 const COMPRESS = new Set(['.html', '.js', '.css', '.json', '.svg', '.wasm', '.webmanifest'])

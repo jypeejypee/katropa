@@ -8,7 +8,7 @@ import { OPTIONS, LABELS, DEFAULT_AVATAR, GENDER_PRESETS, sanitizeAvatar, random
 
 // The tabs of the character creator and which choices are on each
 const TABS = [
-  { name: 'Katawan', rows: [['gender', 'Lalaki o Babae'], ['build', 'Body'], ['skin', 'Skin']] },
+  { name: 'Katawan', rows: [['model', 'Character'], ['gender', 'Lalaki o Babae'], ['build', 'Body'], ['skin', 'Skin']] },
   { name: 'Mukha', rows: [['eyes', 'Eyes'], ['eyeColor', 'Eye color']] },
   { name: 'Buhok', rows: [['hairStyle', 'Hair style'], ['hairColor', 'Hair color']] },
   { name: 'Damit', rows: [['top', 'Top'], ['topColor', 'Top color'], ['bottom', 'Bottom'], ['bottomColor', 'Bottom color']] },
@@ -78,6 +78,9 @@ export default function CharacterCreator() {
             ))}
           </div>
           <div className="tab-body">
+            {avatar.model !== 'custom' && (
+              <div className="model-note">This 3D character has a fixed look. Pick "Gawa ko" to change hair, clothes and shoes.</div>
+            )}
             {TABS[tab].rows.map(([key, label]) => (
               <ChoiceRow key={key} label={label} values={OPTIONS[key]} value={avatar[key]}
                 onPick={(v) => change(key, v)} />

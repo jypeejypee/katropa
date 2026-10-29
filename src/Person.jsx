@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { Suspense, useMemo } from 'react'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { rng } from './world.js'
 import { DEFAULT_AVATAR } from './avatar.js'
+import ModelPerson, { MODEL_FILES } from './ModelPerson.jsx'
 
 // How far the body drops when sitting on the ground
 export const SIT_DROP = 0.66
@@ -45,6 +46,18 @@ function Mat({ color, ...rest }) {
 // limbs is a ref ({ legs: [], arms: [] }) so animatePerson can bend hips, knees, shoulders and elbows.
 // arms[0] is the right arm, the one holding the paddle.
 export function Person({ limbs, avatar, paddleRef }) {
+  // A ready-made 3D character (like the 3D Pinoy) instead of the built one
+  if (MODEL_FILES[avatar?.model]) {
+    return (
+      <Suspense fallback={null}>
+        <ModelPerson model={avatar.model} limbs={limbs} paddleRef={paddleRef} />
+      </Suspense>
+    )
+  }
+  return <BuiltPerson limbs={limbs} avatar={avatar} paddleRef={paddleRef} />
+}
+
+function BuiltPerson({ limbs, avatar, paddleRef }) {
   const a = { ...DEFAULT_AVATAR, ...avatar }
   const s = shapeOf(a)
   const L = limbs.current
@@ -583,6 +596,8 @@ const lerp = THREE.MathUtils.lerp
 // Move arms and legs. moving = walking, swing = -1 or 0..1 (paddle swing),
 // sit = 0..1 (how far sat down), female = sit mahinhin (legs together, folded to the side)
 export function animatePerson(limbs, time, moving, speed, swing = -1, sit = 0, female = false) {
+  // 3D model characters read this to pick their animation (see ModelPerson.jsx)
+  limbs.current.motion = { moving, speed, swing, sit, air: limbs.current.motion?.air ?? false }
   const { legs, arms, knees = [], elbows = [] } = limbs.current
   if (!legs?.[1] || !arms?.[1]) return
   const k = 0.3

@@ -221,6 +221,7 @@ export default function Player() {
     // Knees and elbows bend; sitting is mahinhin for Babae characters
     animatePerson(limbs, state.clock.elapsedTime, moving && !diving && grounded, speed, swing, s.amount,
       getGame().avatar.gender === 'female')
+    limbs.current.motion.air = !grounded && !diving
 
     // 5. Camera
     model.current.visible = !v.firstPerson

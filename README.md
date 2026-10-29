@@ -99,6 +99,16 @@ The browser will warn "Your connection is not private": click **Advanced → Pro
 - Everyone has their own Edson and their own pickleball game for now.
 
 
+## Adding a 3D character (like the 3D Pinoy)
+
+1. Make a character (Tripo, Trellis 3D...) in a **T-pose or A-pose** and download it as **GLB** (1k texture).
+2. Upload it to **mixamo.com**, let it auto-rig, then download these animations as **FBX Binary, 30 fps**
+   (first one **With Skin**, the rest **Without Skin**; tick **In Place** for walking and running):
+   Idle, Walking, Running, Sitting, Jumping.
+3. Put them in `models/source/` named: `trellis.glb` (the colored model), `idle.fbx`, `walk.fbx`, `run.fbx`, `sit.fbx`, `jump.fbx`.
+4. Run `npm run character`. It makes `public/models/pinoy.glb` (small and phone-friendly).
+5. For a new name, add it to `MODEL_FILES` in `src/ModelPerson.jsx` and to `model` in `src/avatar.js`.
+
 ## The files (what each one does)
 
 | File | What it does |
@@ -120,6 +130,8 @@ The browser will warn "Your connection is not private": click **Advanced → Pro
 | `src/Vehicles.jsx` | Tricycles, truck, van, jeep, motorbikes, and the moving traffic |
 | `src/NewLifeFellowship.jsx` | Taytay New Life Fellowship (TNLF), built from Street View and your photos |
 | `src/NearTNLF.jsx` | Left of TNLF: EGB and the shop row, Margie 2 Sari-Sari Store, the badminton COURT, the white house |
+| `src/ModelPerson.jsx` | Ready-made 3D characters (GLB + Mixamo animations) |
+| `tools/` | Scripts that turn Mixamo files into one small character file |
 | `src/Npc.jsx` | Edson: walks home, looks at you, lets you talk with E |
 | `src/Pickleball.jsx` | The pickleball game: court, net, ball, scoring, how Edson plays (difficulty settings at the top) |
 | `src/Hud.jsx` | Things on the screen: talk prompt, dialogue box, scoreboard |
