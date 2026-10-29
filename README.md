@@ -105,7 +105,7 @@ The browser will warn "Your connection is not private": click **Advanced → Pro
 1. Make a character (Tripo, Trellis 3D...) in a **T-pose or A-pose** and download it as **GLB** (1k texture).
 2. Upload it to **mixamo.com**, let it auto-rig, then download these animations as **FBX Binary, 30 fps**
    (first one **With Skin**, the rest **Without Skin**; tick **In Place** for walking and running):
-   Idle, Walking, Running, Sitting, Jumping.
+   Idle, Walking, Running, Sitting, Jumping (and optionally **Dive Roll**, saved as `dive.fbx`).
 3. Make a folder `models/<name>/` (like `models/pinay/`) with: `color.glb` (the colored model), `idle.fbx`, `walk.fbx`, `run.fbx`, `sit.fbx`, `jump.fbx`.
    For `sit.fbx`, pick a sit **on the floor** (chair sits float in the air).
 4. Run `npm run character -- <name>`. It makes `public/models/<name>.glb` (small and phone-friendly).

@@ -189,8 +189,10 @@ export default function Player() {
       model.current.rotation.y = Math.atan2(d.dir.x, d.dir.z)
       const getUp = DIVE_TOTAL - 0.4
       const lean = diveTime < DIVE_FLY ? diveTime / DIVE_FLY : diveTime < getUp ? 1 : (DIVE_TOTAL - diveTime) / 0.4
-      tilt.current.rotation.x = lean * 1.45
-      tilt.current.position.y = -lean * 0.62
+      // 3D model characters have their own dive-roll animation, so don't tip them over too
+      const own = getGame().avatar.model !== 'custom'
+      tilt.current.rotation.x = own ? 0 : lean * 1.45
+      tilt.current.position.y = own ? 0 : -lean * 0.62
     } else {
       tilt.current.rotation.x = 0
       tilt.current.position.y = -SIT_DROP * s.amount // lower the body to the ground when sitting
@@ -222,6 +224,7 @@ export default function Player() {
     animatePerson(limbs, state.clock.elapsedTime, moving && !diving && grounded, speed, swing, s.amount,
       getGame().avatar.gender === 'female')
     limbs.current.motion.air = !grounded && !diving
+    limbs.current.motion.dive = diving
 
     // 5. Camera
     model.current.visible = !v.firstPerson

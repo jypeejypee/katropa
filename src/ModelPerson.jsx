@@ -44,6 +44,15 @@ export default function ModelPerson({ model, limbs, paddleRef }) {
   const { actions } = useAnimations(animations, group)
   const current = useRef(null)
 
+  // The dive roll plays once, sped up to fit the dive (about 1.3 seconds)
+  useEffect(() => {
+    const dive = actions.dive
+    if (!dive) return
+    dive.setLoop(THREE.LoopOnce, 1)
+    dive.clampWhenFinished = true
+    dive.timeScale = dive.getClip().duration / 1.3
+  }, [actions])
+
   // Paddle in the right hand (only visible during pickleball)
   useEffect(() => {
     const hand = character.getObjectByName('mixamorigRightHand') ?? character.getObjectByName('mixamorig:RightHand')
@@ -70,7 +79,8 @@ export default function ModelPerson({ model, limbs, paddleRef }) {
   useFrame(() => {
     const m = limbs.current.motion ?? {}
     let next = 'idle'
-    if (m.sit > 0.5) next = 'sit'
+    if (m.dive && actions.dive) next = 'dive'
+    else if (m.sit > 0.5) next = 'sit'
     else if (m.air) next = 'jump'
     else if (m.moving) next = m.speed > 5 ? 'run' : 'walk'
     if (next !== current.current && actions[next]) {

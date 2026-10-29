@@ -44,9 +44,12 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
     setPeerVolume(id, 1 - (distance - VOICE_FULL) / (VOICE_RANGE - VOICE_FULL))
 
     // Same poses as your own character: diving and sitting
-    tilt.current.rotation.x = t.dive * 1.45
-    tilt.current.position.y = -t.dive * 0.62 - SIT_DROP * t.sit
+    // 3D model characters play their own dive roll instead of tipping over
+    const own = avatar?.model && avatar.model !== 'custom'
+    tilt.current.rotation.x = own ? 0 : t.dive * 1.45
+    tilt.current.position.y = (own ? 0 : -t.dive * 0.62) - SIT_DROP * t.sit
     animatePerson(limbs, state.clock.elapsedTime, t.moving, 3, -1, t.sit, avatar?.gender === 'female')
+    limbs.current.motion.dive = t.dive > 0.05
   })
 
   return (

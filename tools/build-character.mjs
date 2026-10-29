@@ -11,10 +11,11 @@ import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
 import { dedup, prune, resample, textureCompress, meshopt } from '@gltf-transform/functions'
 import { MeshoptEncoder } from 'meshoptimizer'
 import sharp from 'sharp'
+import { existsSync } from 'node:fs'
 
 const outName = process.argv[2] ?? 'pinoy'
 const work = `models/work/${outName}`
-const ANIMATIONS = ['walk', 'run', 'sit', 'jump'] // idle comes with the base file
+const ANIMATIONS = ['walk', 'run', 'sit', 'jump', 'dive'] // idle comes with the base file
 
 await MeshoptEncoder.ready
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.encoder': MeshoptEncoder })
@@ -74,6 +75,7 @@ console.log(`Hands: ${handOf.size} finger bones merged into the hands`)
 // 3. Copy the other animations onto the same skeleton (bones are matched by name)
 const nodeByName = new Map(root.listNodes().map((n) => [n.getName(), n]))
 for (const name of ANIMATIONS) {
+  if (!existsSync(`${work}/${name}.glb`)) continue // dive is optional
   const source = (await io.read(`${work}/${name}.glb`)).getRoot().listAnimations()[0]
   const animation = doc.createAnimation(name)
   for (const channel of source.listChannels()) {

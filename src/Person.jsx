@@ -597,7 +597,8 @@ const lerp = THREE.MathUtils.lerp
 // sit = 0..1 (how far sat down), female = sit mahinhin (legs together, folded to the side)
 export function animatePerson(limbs, time, moving, speed, swing = -1, sit = 0, female = false) {
   // 3D model characters read this to pick their animation (see ModelPerson.jsx)
-  limbs.current.motion = { moving, speed, swing, sit, air: limbs.current.motion?.air ?? false }
+  const last = limbs.current.motion
+  limbs.current.motion = { moving, speed, swing, sit, air: last?.air ?? false, dive: last?.dive ?? false }
   const { legs, arms, knees = [], elbows = [] } = limbs.current
   if (!legs?.[1] || !arms?.[1]) return
   const k = 0.3
