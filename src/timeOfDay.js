@@ -51,8 +51,7 @@ export const TIMES = {
   },
   night: {
     label: '🌙 Night',
-    sun: [-25, 40, 10], // this is the moonlight now
-    moon: [12, 52, -270], // where the moon is in the sky: low over the far end of the street, so you can see it
+    sun: [-25, 40, 10], // this is the moonlight now (where the moon is in the sky: see maps.js)
     sunColor: '#9fb4ff',
     sunIntensity: 0.35,
     sky: ['#03050c', '#070c1c', '#141e38', '#1c2742'],

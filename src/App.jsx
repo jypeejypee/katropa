@@ -75,7 +75,7 @@ export default function App() {
           camera={{ fov: 60, near: 0.1, far: 400 }}
         >
           <fog attach="fog" args={[time.fog, time.fogNear * MAPS[map].fog, time.fogFar * MAPS[map].fog]} />
-          <SkyAndClouds time={time} low={low} />
+          <SkyAndClouds time={time} low={low} moon={MAPS[map].moon} />
           {/* Smooth mode has no lamp lights, so nights get a bit more soft light instead */}
           <hemisphereLight color={time.hemiSky} groundColor={time.hemiGround}
             intensity={time.hemi * (low && time.lamps ? 1.8 : 1)} />

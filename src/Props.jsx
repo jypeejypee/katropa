@@ -356,8 +356,8 @@ export function Bucket({ position }) {
   )
 }
 
-// Sky dome, clouds, and (at night) stars and the moon. time: settings from timeOfDay.js
-export function SkyAndClouds({ time, low }) {
+// Sky dome, clouds, and (at night) stars and the moon. time: settings from timeOfDay.js, moon: where it is (maps.js)
+export function SkyAndClouds({ time, low, moon }) {
   const stars = useMemo(() => {
     const random = rng(33)
     const points = []
@@ -396,7 +396,7 @@ export function SkyAndClouds({ time, low }) {
         <points geometry={stars} visible={time.stars}>
           <pointsMaterial color="#ffffff" size={1.6} sizeAttenuation={false} fog={false} depthWrite={false} />
         </points>
-        <sprite position={time.moon ?? [0, 52, -270]} scale={[30, 30, 1]} visible={time.stars} renderOrder={1}>
+        <sprite position={moon} scale={[85, 85, 1]} visible={time.stars} renderOrder={1}>
           <spriteMaterial map={moonTexture()} transparent fog={false} depthWrite={false} />
         </sprite>
       </group>

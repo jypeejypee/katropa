@@ -197,22 +197,48 @@ export const skyTexture = (colors) =>
   })
 
 // Round glowing moon
+// Full moon: bright white with soft gray "seas" and small craters, and a wide misty glow around it
 export const moonTexture = () =>
-  makeTexture('moon', 128, 128, (ctx, w, h) => {
-    const glow = ctx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, 64)
-    glow.addColorStop(0, 'rgba(220, 230, 255, 0.5)')
-    glow.addColorStop(1, 'rgba(220, 230, 255, 0)')
+  makeTexture('moon', 256, 256, (ctx, w, h) => {
+    const cx = w / 2
+    const cy = h / 2
+    const R = 46 // the moon itself; the rest of the picture is the glow
+    const glow = ctx.createRadialGradient(cx, cy, R * 0.9, cx, cy, w / 2)
+    glow.addColorStop(0, 'rgba(225, 232, 255, 0.55)')
+    glow.addColorStop(0.35, 'rgba(200, 212, 245, 0.18)')
+    glow.addColorStop(1, 'rgba(200, 212, 245, 0)')
     ctx.fillStyle = glow
     ctx.fillRect(0, 0, w, h)
-    ctx.fillStyle = '#f4f1e6'
+    // the disc: brighter in the middle
+    const disc = ctx.createRadialGradient(cx - R * 0.2, cy - R * 0.2, R * 0.1, cx, cy, R)
+    disc.addColorStop(0, '#ffffff')
+    disc.addColorStop(0.8, '#eef0f2')
+    disc.addColorStop(1, '#d9dde2')
+    ctx.fillStyle = disc
     ctx.beginPath()
-    ctx.arc(w / 2, h / 2, 24, 0, Math.PI * 2)
+    ctx.arc(cx, cy, R, 0, Math.PI * 2)
     ctx.fill()
-    ctx.fillStyle = 'rgba(180, 175, 160, 0.5)'
-    ctx.beginPath()
-    ctx.arc(w / 2 - 7, h / 2 - 5, 6, 0, Math.PI * 2)
-    ctx.arc(w / 2 + 8, h / 2 + 7, 4, 0, Math.PI * 2)
-    ctx.fill()
+    ctx.save()
+    ctx.clip()
+    // the gray seas (blurry blobs) and craters
+    const random = rng(7)
+    ctx.filter = 'blur(3px)'
+    for (const [x, y, r] of [[-14, -12, 15], [6, -18, 11], [16, -4, 9], [-4, 4, 10], [-18, 10, 8], [10, 16, 7]]) {
+      ctx.fillStyle = `rgba(150, 156, 166, ${0.35 + random() * 0.2})`
+      ctx.beginPath()
+      ctx.ellipse(cx + x, cy + y, r, r * (0.7 + random() * 0.4), random() * 3, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.filter = 'none'
+    for (let i = 0; i < 14; i++) {
+      const a = random() * Math.PI * 2
+      const d = random() * R * 0.85
+      ctx.fillStyle = 'rgba(160, 165, 175, 0.35)'
+      ctx.beginPath()
+      ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 1 + random() * 2.5, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.restore()
   })
 
 // Fluffy white cloud made of soft circles
