@@ -9,7 +9,7 @@ export const MAPS = {
   },
   bridgetowne: {
     label: 'Bridgetowne, Pasig',
-    start: [-10.6, 1.5, 165], // between GBF Center and Opus, looking toward the bridge and The Victor
+    start: [-10.6, 1.5, 125], // between GBF Center and Opus, looking toward the bridge and The Victor
     fog: 1.6,
   },
 }

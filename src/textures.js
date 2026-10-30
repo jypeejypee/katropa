@@ -459,15 +459,18 @@ export const glassTexture = (repeat) =>
     }
   }, repeat)
 
-// Grey horizontal louvers over the parking floors (GBF Center)
-export const greyLouverTexture = (repeat) =>
-  makeTexture('greyLouver', 64, 64, (ctx, w, h) => {
-    ctx.fillStyle = '#3c3f42'
+// Black block of thin vertical louvers with a few small dark vents (GBF Center, side street)
+export const blackLouverTexture = (repeat) =>
+  makeTexture('blackLouver', 64, 64, (ctx, w, h) => {
+    ctx.fillStyle = '#1b1d20'
     ctx.fillRect(0, 0, w, h)
-    for (let y = 0; y < h; y += 6) {
-      ctx.fillStyle = '#676b70'
-      ctx.fillRect(0, y, w, 3)
+    for (let x = 0; x < w; x += 4) {
+      ctx.fillStyle = '#34383d'
+      ctx.fillRect(x, 0, 2, h)
     }
+    ctx.fillStyle = '#060606'
+    ctx.fillRect(10, 20, 4, 4)
+    ctx.fillRect(42, 46, 4, 4)
   }, repeat)
 
 // Tower still being built: concrete floor slabs, dark openings, green safety net and a few blue windows.

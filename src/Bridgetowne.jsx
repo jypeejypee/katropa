@@ -77,8 +77,13 @@ function Road() {
       </RigidBody>
       <Box size={[MEDIAN * 2, 0.12, LENGTH]} position={[0, 0.06, MID]} color="#cfcac0" />
       <Patch x={[-MEDIAN + 0.15, MEDIAN - 0.15]} z={[START - 10, END + 10]} y={0.125} color="#5f7d3c" />
-      {/* Side street on the left, and the orange box at the crossing (like in front of Opus) */}
+      {/* Side street on the left, the road through the Opus tunnel on the right, and the orange box at the crossing */}
       <Patch x={[-HALF_WIDTH, -BIKE_EDGE]} z={SIDE_ROAD} y={0.02} map={asphaltTexture([16, 3])} roughness={0.9} />
+      <Patch x={[BIKE_EDGE, HALF_WIDTH + 60]} z={SIDE_ROAD} y={0.02} map={asphaltTexture([30, 3])} roughness={0.9} />
+      {/* Pedestrian crossing at the tunnel */}
+      {Array.from({ length: 6 }, (_, i) => SIDE_ROAD[0] + 1 + i * 1.6).map((z) => (
+        <Patch key={z} x={[18, 21.5]} z={[z, z + 0.7]} y={0.04} color="#eeeeee" />
+      ))}
       <OrangeBox x={[-CAR_EDGE, CAR_EDGE]} z={SIDE_ROAD} />
     </>
   )
@@ -104,11 +109,12 @@ function OrangeBox({ x: [x0, x1], z: [z0, z1] }) {
   )
 }
 
-// Raised sidewalks. The left one stops at the side street.
+// Raised sidewalks. They stop at the side street (left) and at the Opus tunnel (right).
 function Sidewalks() {
   const width = WALK_EDGE - BIKE_EDGE
   const pieces = [
-    [1, START - 10, END + 10],
+    [1, START - 10, SIDE_ROAD[0]],
+    [1, SIDE_ROAD[1], END + 10],
     [-1, START - 10, SIDE_ROAD[0]],
     [-1, SIDE_ROAD[1], END + 10],
   ]
@@ -137,9 +143,8 @@ function Plazas() {
       <Patch x={[45, HALF_WIDTH]} z={[-40, RIVER[0]]} color={paving} />
       <Patch x={[WALK_EDGE, 45]} z={[-38, RIVER[0]]} color={paving} />
       {/* In front of Opus and GBF Center, and the walk by the river on the right before the bridge */}
-      <Patch x={[WALK_EDGE, 16]} z={[36, 160]} color={paving} />
-      <Patch x={[WALK_EDGE, HALF_WIDTH]} z={[RIVER[1], 36]} color={paving} />
-      <Patch x={[-16.2, -WALK_EDGE]} z={[SIDE_ROAD[1], 165]} color={paving} />
+      <Patch x={[WALK_EDGE, 16]} z={[RIVER[1], 150]} color={paving} />
+      <Patch x={[-16.2, -WALK_EDGE]} z={[SIDE_ROAD[1], 105]} color={paving} />
       {/* Riverside walk in front of the towers being built: wooden deck with little lamp posts */}
       <Patch x={[-HALF_WIDTH, -WALK_EDGE]} z={[-38, RIVER[0]]} y={0.03} map={deckTexture([30, 5])} />
       {[-18, -30, -42, -54, -66].map((x) => (
@@ -172,8 +177,8 @@ function Railings() {
   const bank = 0.3
   return (
     <>
-      <Railing from={[-12.1, -30]} to={[-12.1, 38]} />
-      <Railing from={[12.1, -38]} to={[12.1, 38]} />
+      <Railing from={[-12.1, -30]} to={[-12.1, 32]} />
+      <Railing from={[12.1, -38]} to={[12.1, 32]} />
       {[RIVER[0] - bank, RIVER[1] + bank].map((z) => (
         <group key={z}>
           <Railing from={[-HALF_WIDTH, z]} to={[-12.2, z]} color="#2d3238" />
@@ -184,10 +189,11 @@ function Railings() {
   )
 }
 
-const LEFT_ARCHES = [[-10, 8, 10], [18, 6, 9]]
-const RIGHT_ARCHES = [[-6, 10, 11], [24, 6, 8]]
-const bollards = Array.from({ length: 51 }, (_, i) => -60 + i * 2.4)
-const bowls = [-43, -29, -15, -1, 13, 27, 41, 55]
+// [middle, height, half length] of the big arches; the coils only run along the bridge
+const LEFT_ARCHES = [[-10, 8, 10], [13, 6, 8]]
+const RIGHT_ARCHES = [[-6, 10, 11], [16, 6, 8]]
+const bollards = Array.from({ length: 34 }, (_, i) => -50 + i * 2.4)
+const bowls = [-43, -29, -15, -1, 13, 27]
 
 export default memo(function Bridgetowne() {
   return (
@@ -201,8 +207,8 @@ export default memo(function Bridgetowne() {
         <Railings />
 
         <Victor />
-        <Coils side={-1} z0={-30} z1={44} arches={LEFT_ARCHES} />
-        <Coils side={1} z0={-40} z1={44} arches={RIGHT_ARCHES} />
+        <Coils side={-1} z0={-30} z1={30} arches={LEFT_ARCHES} />
+        <Coils side={1} z0={-30} z1={30} arches={RIGHT_ARCHES} />
         <Opus />
         <GbfCenter />
         <Towers />

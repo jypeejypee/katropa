@@ -4,10 +4,10 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier'
 import { rng } from './world.js'
 import { getGame } from './game.js'
-import { VICTOR, LAMP_ARM, LAMP_HEIGHT } from './bridgetowne.js'
+import { VICTOR, LAMP_ARM, LAMP_HEIGHT, SIDE_ROAD } from './bridgetowne.js'
 import {
-  finTexture, hexTexture, glassTexture, greyLouverTexture, constructionTexture, podiumTexture,
-  hoardingTexture, railBarsTexture, signTexture,
+  finTexture, hexTexture, glassTexture, blackLouverTexture, constructionTexture, podiumTexture,
+  hoardingTexture, railBarsTexture, signTexture, louverTexture,
 } from './textures.js'
 
 const yAxis = new THREE.Vector3(0, 1, 0)
@@ -214,8 +214,8 @@ export function Coils({ side, z0, z1, arches }) {
 
 // ---------- Opus ----------
 // The long mall on the right before the bridge: dark fins, big copper hexagon panels in gold frames,
-// the orange drive-through, and the dark tower at the end by the bridge.
-const OPUS = { x0: 16, x1: 66, z0: 40, z1: 152, h: 30 }
+// the orange tunnel through the building (the road to Ortigas Ave), and the dark tower above it.
+const OPUS = { x0: 16, x1: 66, z0: 29, z1: 146, h: 30 }
 
 // Copper hexagons in a gold frame on the front of Opus
 function HexPanel({ z0, z1, y0, y1 }) {
@@ -233,77 +233,124 @@ function HexPanel({ z0, z1, y0, y1 }) {
 
 export function Opus() {
   const { x0, x1, z0, z1, h } = OPUS
-  const len = z1 - z0
-  const zm = (z0 + z1) / 2
+  const [t0, t1] = SIDE_ROAD // the tunnel to Ortigas Ave goes through here
+  const top = 11 // height of the tunnel
+  const xm = (x0 + x1) / 2
+  const depth = x1 - x0
+  // The front wall between two z's: fins above, shops on the ground floor under a dark canopy
+  const front = (a, b, shops = true) => (
+    <group key={a}>
+      <Face facing="west" x={x0 - 0.03} y={18} z={(a + b) / 2} w={b - a} h={24} map={finTexture([(b - a) / 4, 12])} />
+      {shops && <Face facing="west" x={x0 - 0.04} y={3} z={(a + b) / 2} w={b - a} h={6} map={glassTexture([(b - a) / 3, 2])} color="#8d98a2" />}
+      {shops && <Box size={[2, 0.3, b - a]} position={[x0 - 1, 5.6, (a + b) / 2]} color="#1e1f21" />}
+    </group>
+  )
   return (
     <>
-      <Solid x={[x0, x1]} y={[0, h]} z={[z0, z1]} />
-      <Box size={[x1 - x0, h, len]} position={[(x0 + x1) / 2, h / 2, zm]} color="#2b2e32" />
-      {/* Fins on the front and on the side facing the river */}
-      <Face facing="west" x={x0 - 0.03} y={18} z={zm} w={len} h={24} map={finTexture([len / 4, 12])} />
-      <Face facing="south" x={(x0 + x1) / 2} y={18} z={z0 - 0.03} w={x1 - x0} h={24} map={finTexture([(x1 - x0) / 4, 12])} />
-      {/* Shops on the ground floor, under a dark canopy */}
-      <Face facing="west" x={x0 - 0.04} y={3} z={zm} w={len} h={6} map={glassTexture([len / 3, 2])} color="#8d98a2" />
-      <Box size={[2, 0.3, len]} position={[x0 - 1, 5.6, zm]} color="#1e1f21" />
-      <Box size={[0.3, 0.3, len]} position={[x0 - 0.15, h - 0.15, zm]} color={GOLD} metalness={0.5} roughness={0.4} />
+      {/* The building, in two parts with the tunnel between them (and the floors above the tunnel) */}
+      <Solid x={[x0, x1]} y={[0, h]} z={[z0, t0]} />
+      <Solid x={[x0, x1]} y={[0, h]} z={[t1, z1]} />
+      <Solid x={[x0, x1]} y={[top, h]} z={[t0, t1]} />
+      <Box size={[depth, h, t0 - z0]} position={[xm, h / 2, (z0 + t0) / 2]} color="#2b2e32" />
+      <Box size={[depth, h, z1 - t1]} position={[xm, h / 2, (t1 + z1) / 2]} color="#2b2e32" />
+      <Box size={[depth, h - top, t1 - t0]} position={[xm, (h + top) / 2, (t0 + t1) / 2]} color="#2b2e32" />
 
-      <HexPanel z0={44} z1={58} y0={8} y1={24} />
-      <HexPanel z0={72} z1={90} y0={9} y1={29} />
+      {front(z0, t0 - 1.6)}
+      {front(t1 + 1.6, z1)}
+      <Face facing="west" x={x0 - 0.03} y={(top + 3 + h) / 2} z={(t0 + t1) / 2} w={t1 - t0 + 3.2} h={h - top - 3}
+        map={finTexture([(t1 - t0) / 4, 8])} />
+      {/* Fins on the side facing the river */}
+      <Face facing="south" x={xm} y={18} z={z0 - 0.03} w={depth} h={24} map={finTexture([depth / 4, 12])} />
+      <Box size={[0.3, 0.3, z1 - z0]} position={[x0 - 0.15, h - 0.15, (z0 + z1) / 2]} color={GOLD} metalness={0.5} roughness={0.4} />
+
+      <HexPanel z0={30} z1={37.5} y0={14} y1={28} />
+      <HexPanel z0={56} z1={70} y0={8} y1={24} />
+      <HexPanel z0={76} z1={92} y0={9} y1={29} />
       <HexPanel z0={108} z1={126} y0={7} y1={29} />
-      <HexPanel z0={132} z1={148} y0={10} y1={28} />
+      <HexPanel z0={130} z1={144} y0={10} y1={28} />
+      {/* Glass box on the front, by the bridge */}
+      <Box size={[1.5, 6, 6]} position={[x0 - 0.75, 9, 32]} color="#cfdde8" map={glassTexture([2, 2])} metalness={0.3} roughness={0.15} />
 
-      {/* Orange drive-through with lights in the ceiling */}
-      <Face facing="west" x={x0 - 0.05} y={5} z={100} w={14} h={10} color="#15171a" />
-      {[94.2, 105.8].map((z) => <Box key={z} size={[0.7, 13, 1.6]} position={[x0 - 0.35, 6.5, z]} color="#c4683e" />)}
-      <Box size={[0.7, 3, 14]} position={[x0 - 0.35, 11.5, 100]} color="#c4683e" />
-      {[97, 100, 103].map((z) => (
-        <mesh key={z} position={[x0 - 0.07, 9.4, z]} rotation={[0, -Math.PI / 2, 0]}>
-          <planeGeometry args={[0.6, 0.3]} />
-          <meshStandardMaterial color="#fff2cc" emissive="#fff2cc" emissiveIntensity={0.8} />
-        </mesh>
-      ))}
+      {/* ---- The tunnel to Ortigas Ave: orange frame, dark wooden slats, rows of lights ---- */}
+      {[t0 - 0.8, t1 + 0.8].map((z) => <Box key={z} size={[0.7, top + 2, 1.6]} position={[x0 - 0.35, (top + 2) / 2, z]} color="#c4683e" />)}
+      <Box size={[0.7, 2, t1 - t0 + 3.2]} position={[x0 - 0.35, top + 1, (t0 + t1) / 2]} color="#c4683e" />
+      <Face facing="north" x={xm} y={top / 2} z={t0 + 0.02} w={depth} h={top} map={louverTexture([depth / 2, 3])} />
+      <Face facing="south" x={xm} y={top / 2} z={t1 - 0.02} w={depth} h={top} map={louverTexture([depth / 2, 3])} />
+      <mesh position={[xm, top - 0.02, (t0 + t1) / 2]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[depth, t1 - t0]} />
+        <meshStandardMaterial map={louverTexture([depth / 2, 3])} />
+      </mesh>
+      {Array.from({ length: 8 }, (_, i) => x0 + 3 + i * 6.5).map((x) =>
+        [t0 + 2.5, (t0 + t1) / 2, t1 - 2.5].map((z) => (
+          <mesh key={`${x}${z}`} position={[x, top - 0.05, z]} rotation={[Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[0.5, 0.5]} />
+            <meshStandardMaterial color="#fff2cc" emissive="#fff2cc" emissiveIntensity={0.9} />
+          </mesh>
+        ))
+      )}
+      {/* Green road sign inside the tunnel */}
+      <Face facing="west" x={x0 + 1} y={top - 1.2} z={(t0 + t1) / 2} w={4.4} h={1.1}
+        map={signTexture({ text: 'ORTIGAS AVE', bg: '#1f6b3a', fg: '#ffffff' }, 4.4, 1.1)} />
 
-      {/* Glass box at the corner by the bridge */}
-      <Solid x={[16.5, 23.5]} y={[0, 14]} z={[z0 - 4, z0]} />
-      <Box size={[7, 8, 4]} position={[20, 10, z0 - 2]} color="#cfdde8" map={glassTexture([2, 3])} metalness={0.3} roughness={0.15} />
-      {/* The tower: dark with gold fins */}
-      <Box size={[24, 76, 30]} position={[34, h + 38, 55]} color="#ffffff" map={finTexture([7, 38])} />
-      {[[22, 40], [46, 40], [22, 70], [46, 70]].map(([x, z]) => (
+      {/* The tower above the tunnel: dark with gold fins */}
+      <Box size={[24, 76, 30]} position={[34, h + 38, 44]} color="#ffffff" map={finTexture([7, 38])} />
+      {[[22, 29], [46, 29], [22, 59], [46, 59]].map(([x, z]) => (
         <Box key={`${x}${z}`} size={[0.6, 76, 0.6]} position={[x, h + 38, z]} color={GOLD} metalness={0.5} roughness={0.4} />
       ))}
-      <Box size={[25, 2, 31]} position={[34, h + 77, 55]} color="#1e2023" />
+      <Box size={[25, 2, 31]} position={[34, h + 77, 44]} color="#1e2023" />
     </>
   )
 }
 
 // ---------- GBF Center ----------
-// Office tower on the left before the bridge, next to the side street: grey louvers over the parking floors,
-// a glass corner, white pillars, and MERIENDA on the ground floor.
+// Office tower on the left, right where the bridge starts (from the Street View photo):
+// a glass tower that comes almost down to the ground, a black block of thin louvers on the side-street face,
+// a glass corner, grey stone pillars, and the glass ground floor with MERIENDA set back under it.
+// Main road face = x -16.2 (facing +x), side-street face = z 52 (facing -z).
+const GBF = { x0: -50, x1: -16.2, z0: 56, z1: 106, lift: 5.5, h: 110 }
+
 export function GbfCenter() {
-  const zm = 135
+  const { x0, x1, z0, z1, lift, h } = GBF
+  const xm = (x0 + x1) / 2
+  const zm = (z0 + z1) / 2
+  const back = 2.5 // how far the ground floor is set back under the building
+  const pillar = (x, z) => (
+    <group key={`${x}${z}`}>
+      <Solid x={[x - 0.45, x + 0.45]} y={[0, lift]} z={[z - 0.45, z + 0.45]} />
+      <Box size={[0.9, lift, 0.9]} position={[x, lift / 2, z]} color="#8f8e8b" roughness={0.5} />
+    </group>
+  )
   return (
     <>
-      <Solid x={[-50, -16.2]} y={[0, 41]} z={[110, 160]} />
-      <Box size={[33, 5, 49]} position={[-33.5, 2.5, zm]} color="#2a3036" />
-      <Face facing="east" x={-16.98} y={2.5} z={zm} w={49} h={5} map={glassTexture([16, 2])} color="#e8eff3" />
-      {Array.from({ length: 8 }, (_, i) => (
-        <Box key={i} size={[0.9, 5, 0.9]} position={[-16.6, 2.5, 112 + i * 6.7]} color="#d9d5ce" />
-      ))}
-      <Box size={[2.2, 0.35, 50]} position={[-16.4, 5.1, zm]} color="#c9c6c0" />
-      <Face facing="east" x={-16.9} y={3.9} z={129} w={6} h={0.9}
-        map={signTexture({ text: 'MERIENDA by Pan de Manila', bg: '#222222', fg: '#ffffff' }, 6, 0.9)} />
-      {/* Parking floors behind louvers */}
-      <Box size={[34, 29, 50]} position={[-33, 19.5, zm]} color="#ffffff" map={greyLouverTexture([10, 10])} />
-      {/* Glass corner and the tower */}
-      <Box size={[8.4, 36, 8.4]} position={[-20.6, 23, 114]} color="#cfdbe4" map={glassTexture([3, 12])} metalness={0.3} roughness={0.15} />
-      <mesh castShadow receiveShadow position={[-34, 75, 136]} material={nightGlass}>
-        <boxGeometry args={[28, 82, 40]} />
+      {/* The building above the ground floor (solid, so the camera stays outside) */}
+      <Solid x={[x0, x1]} y={[lift, 45]} z={[z0, z1]} />
+      <mesh castShadow receiveShadow position={[xm, lift + (h - lift) / 2, zm]} material={nightGlass}>
+        <boxGeometry args={[x1 - x0, h - lift, z1 - z0]} />
       </mesh>
+      {/* Light ceiling under the building */}
+      <Box size={[x1 - x0 + 0.2, 0.3, z1 - z0 + 0.2]} position={[xm, lift - 0.1, zm]} color="#d9d6d0" />
+
+      {/* Black louver block on the side-street face, next to the glass corner */}
+      <Box size={[x1 - 9 - x0 + 0.2, 40, 24]} position={[(x0 - 0.2 + x1 - 9) / 2, lift + 20, z0 + 11.8]} color="#ffffff" map={blackLouverTexture([8, 10])} />
+      {/* Glass corner: slightly sticking out, reflecting the sky */}
+      <Box size={[9, 40, 1]} position={[x1 - 4.5, lift + 20, z0 - 0.3]} color="#d7e3ec" map={glassTexture([3, 12])} metalness={0.4} roughness={0.08} />
+
+      {/* Glass ground floor, set back behind the pillars */}
+      <Solid x={[x0, x1 - back]} y={[0, lift]} z={[z0 + back, z1]} />
+      <Box size={[x1 - back - x0, lift, z1 - z0 - back]} position={[(x0 + x1 - back) / 2, lift / 2, (z0 + back + z1) / 2]} color="#3a3f44" />
+      <Face facing="east" x={x1 - back + 0.02} y={lift / 2} z={(z0 + back + z1) / 2} w={z1 - z0 - back} h={lift}
+        map={glassTexture([12, 2])} color="#eef3f6" />
+      <Face facing="south" x={(x0 + x1 - back) / 2} y={lift / 2} z={z0 + back - 0.02} w={x1 - back - x0} h={lift}
+        map={glassTexture([10, 2])} color="#cfd7dd" />
+      <Face facing="east" x={x1 - back + 0.04} y={3.9} z={z0 + 8} w={5} h={0.8}
+        map={signTexture({ text: 'MERIENDA by Pan de Manila', bg: '#1d2a3a', fg: '#ffffff' }, 5, 0.8)} />
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => pillar(x1 - 1, z0 + 1 + i * 8))}
+      {[1, 2, 3, 4].map((i) => pillar(x1 - 1 - i * 8, z0 + 1))}
       {/* Black stone sign at the corner */}
-      <Box size={[0.8, 2.4, 3]} position={[-14.6, 1.2, 107.5]} color="#1d1d1f" roughness={0.3} />
-      <Face facing="east" x={-14.18} y={1.5} z={107.5} w={2.4} h={1}
+      <Box size={[0.8, 2.4, 3]} position={[-14.6, 1.2, 53.5]} color="#1d1d1f" roughness={0.3} />
+      <Face facing="east" x={-14.18} y={1.5} z={53.5} w={2.4} h={1}
         map={signTexture({ text: 'GBF CENTER', bg: '#1d1d1f', fg: '#e6e6e6' }, 2.4, 1)} />
-      <Solid x={[-15, -14.2]} y={[0, 2.4]} z={[106, 109]} />
+      <Solid x={[-15, -14.2]} y={[0, 2.4]} z={[52, 55]} />
     </>
   )
 }
