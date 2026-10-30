@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { Suspense, useMemo } from 'react'
+import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier'
@@ -10,7 +11,6 @@ import {
   hoardingTexture, railBarsTexture, signTexture, louverTexture,
 } from './textures.js'
 
-const yAxis = new THREE.Vector3(0, 1, 0)
 const zAxis = new THREE.Vector3(0, 0, 1)
 const GOLD = '#c79c58'
 const TAN = '#c8904f' // the rattan-colored coils on the bridge
@@ -52,98 +52,53 @@ export function Solid({ x: [x0, x1], y: [y0, y1] = [0, 10], z: [z0, z1] }) {
   )
 }
 
-// A tapered cylinder from one point to another (arms and legs of The Victor)
-function Segment({ from, to, r1, r2, material }) {
-  const { position, quaternion, length } = useMemo(() => {
-    const a = new THREE.Vector3(...from)
-    const b = new THREE.Vector3(...to)
-    const dir = b.clone().sub(a)
-    return {
-      position: a.clone().add(b).multiplyScalar(0.5),
-      quaternion: new THREE.Quaternion().setFromUnitVectors(yAxis, dir.clone().normalize()),
-      length: dir.length(),
-    }
-  }, [from, to])
-  return (
-    <mesh castShadow position={position} quaternion={quaternion} material={material}>
-      <cylinderGeometry args={[r2, r1, length, 14]} />
-    </mesh>
-  )
-}
-
-function Ball({ position, r, scale, material }) {
-  return (
-    <mesh castShadow position={position} scale={scale} material={material}>
-      <sphereGeometry args={[r, 18, 12]} />
-    </mesh>
-  )
-}
-
 // ---------- The Victor ----------
 // The giant silver man with his right fist up, at the Pasig end of the bridge.
-// Built facing -z, so you see his back when you walk over the bridge (like in the photos).
-// His right side is +x. He stands on the right side of the road, just past the bridge.
+// The model is public/models/victor.glb (made with `npm run victor` from models/victor/victor.obj).
+// He faces -z, so you see his back when you walk over the bridge (like in the photos).
+// He stands on the right side of the road, just past the bridge.
+const VICTOR_FILE = '/models/victor.glb'
+
+function VictorStatue({ y }) {
+  const { nodes } = useGLTF(VICTOR_FILE)
+  const n = nodes.victor // its position and scale unpack the compressed points
+  return (
+    <mesh castShadow geometry={n.geometry} material={victorMaterial}
+      position={[n.position.x, n.position.y + y, n.position.z]} quaternion={n.quaternion} scale={n.scale} />
+  )
+}
+useGLTF.preload(VICTOR_FILE)
+
 export function Victor() {
-  const m = victorMaterial
   const base = 1.2 // height of the round planter he stands on
+  const r = 9 // the planter is wide enough for his feet
   return (
     <>
       <RigidBody type="fixed" colliders={false} position={[VICTOR.x, base / 2, VICTOR.z]}>
-        <CylinderCollider args={[base / 2, 6.2]} />
+        <CylinderCollider args={[base / 2, r]} />
       </RigidBody>
       <group position={[VICTOR.x, 0, VICTOR.z]}>
         {/* Round planter */}
         <mesh castShadow receiveShadow position={[0, base / 2, 0]}>
-          <cylinderGeometry args={[6.2, 6.4, base, 40]} />
+          <cylinderGeometry args={[r, r + 0.2, base, 48]} />
           <meshStandardMaterial color="#cfcac0" />
         </mesh>
         <mesh receiveShadow position={[0, base + 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[6, 40]} />
+          <circleGeometry args={[r - 0.2, 48]} />
           <meshStandardMaterial color="#5c7f3a" />
         </mesh>
-        {Array.from({ length: 18 }, (_, i) => {
-          const a = (i / 18) * Math.PI * 2
+        {Array.from({ length: 24 }, (_, i) => {
+          const a = (i / 24) * Math.PI * 2
           return (
-            <mesh key={i} castShadow position={[Math.cos(a) * 5.3, base + 0.35, Math.sin(a) * 5.3]} scale={[1, 0.7, 1]}>
+            <mesh key={i} castShadow position={[Math.cos(a) * (r - 0.9), base + 0.35, Math.sin(a) * (r - 0.9)]} scale={[1, 0.7, 1]}>
               <icosahedronGeometry args={[0.6, 0]} />
               <meshStandardMaterial color={i % 3 ? '#4f7a33' : '#b5443a'} flatShading />
             </mesh>
           )
         })}
-
-        <group position={[0, base, 0]}>
-          {/* Legs */}
-          {[-1, 1].map((s) => (
-            <group key={s}>
-              <Segment from={[s * 2.4, 23, 0]} to={[s * 2.9, 12.5, -0.3]} r1={2.5} r2={1.8} material={m} />
-              <Ball position={[s * 2.9, 12.5, -0.3]} r={1.75} material={m} />
-              <Segment from={[s * 2.9, 12.5, -0.3]} to={[s * 3.3, 1.6, 0]} r1={1.7} r2={0.95} material={m} />
-              <mesh castShadow position={[s * 3.3, 0.7, -0.9]} material={m}>
-                <boxGeometry args={[1.8, 1.4, 4]} />
-              </mesh>
-            </group>
-          ))}
-          <Ball position={[0, 24, 0.2]} r={3.6} scale={[1.3, 0.95, 0.9]} material={m} />
-          {/* Body, chest and shoulders */}
-          <mesh castShadow position={[0, 30.5, 0]} scale={[1, 1, 0.68]} material={m}>
-            <cylinderGeometry args={[4.4, 3.3, 12, 20]} />
-          </mesh>
-          <Ball position={[0, 35.6, 0]} r={4.5} scale={[1.15, 0.7, 0.7]} material={m} />
-          <Segment from={[0, 37.5, 0]} to={[0, 41, -0.1]} r1={1.5} r2={1.3} material={m} />
-          <Ball position={[0, 43.5, -0.2]} r={2.7} scale={[0.9, 1.15, 1]} material={m} />
-          {/* Right arm up, fist to the sky */}
-          <Ball position={[4.9, 36.5, 0]} r={1.8} material={m} />
-          <Segment from={[4.9, 36.5, 0]} to={[6.3, 45, 0.3]} r1={1.6} r2={1.25} material={m} />
-          <Ball position={[6.3, 45, 0.3]} r={1.25} material={m} />
-          <Segment from={[6.3, 45, 0.3]} to={[6.6, 53, -0.3]} r1={1.25} r2={0.95} material={m} />
-          <Ball position={[6.6, 54.4, -0.3]} r={1.6} scale={[1, 1.1, 1]} material={m} />
-          {/* Left arm down, fist closed */}
-          <Ball position={[-4.9, 36.5, 0]} r={1.8} material={m} />
-          <Segment from={[-4.9, 36.5, 0]} to={[-6.0, 28.5, 0.2]} r1={1.6} r2={1.2} material={m} />
-          <Ball position={[-6.0, 28.5, 0.2]} r={1.2} material={m} />
-          <Segment from={[-6.0, 28.5, 0.2]} to={[-6.6, 21, -0.2]} r1={1.2} r2={0.9} material={m} />
-          <Ball position={[-6.7, 19.8, -0.3]} r={1.4} material={m} />
-        </group>
+        <Suspense fallback={null}>
+          <VictorStatue y={base} />
+        </Suspense>
       </group>
     </>
   )

@@ -11,7 +11,8 @@
     "dev:lan": "vite --mode lan",
     "lan": "vite build && vite preview --mode lan",
     "start": "node server/index.js",
-    "character": "node tools/character.mjs"
+    "character": "node tools/character.mjs",
+    "victor": "node tools/build-victor.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

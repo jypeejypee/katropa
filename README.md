@@ -127,6 +127,14 @@ The browser will warn "Your connection is not private": click **Advanced → Pro
 4. Run `npm run character -- <name>`. It makes `public/models/<name>.glb` (small and phone-friendly).
 5. For a new name, add it to `MODEL_FILES` in `src/ModelPerson.jsx` and to `model` in `src/avatar.js`.
 
+## Changing The Victor
+
+The statue is `public/models/victor.glb`, made from `models/victor/victor.obj` (a body made from photos).
+`npm run victor` cuts off the OBJ's round ball head, sculpts a human head in its place (brow, eyes, nose,
+lips, jaw, chin, ears, neck, looking up at the fist) and saves the GLB, about 56 m tall.
+To change the face, edit `head()` in `tools/build-victor.mjs` and run it again
+(`npm run victor -- --obj` also writes `models/work/victor.obj` to look at).
+
 ## Admin (jaypee)
 
 - Type the name **jaypee** on the start screen and an **Admin code** box appears. With the right code you get the **⚙️ Admin** button:
@@ -174,7 +182,7 @@ everyone. Tap **Tapos na** to stop watching.
 | `src/NewLifeFellowship.jsx` | Taytay New Life Fellowship (TNLF), built from Street View and your photos |
 | `src/NearTNLF.jsx` | Left of TNLF: EGB and the shop row, Margie 2 Sari-Sari Store, the badminton COURT, the white house |
 | `src/ModelPerson.jsx` | Ready-made 3D characters (GLB + Mixamo animations) |
-| `tools/` | Scripts that turn Mixamo files into one small character file |
+| `tools/` | Scripts that turn Mixamo files into one small character file, and build The Victor (`build-victor.mjs`) |
 | `src/AcrossTNLF.jsx` | Across from TNLF: the yellow-green house with the gold gate, KTV ROOM and Cuesociety |
 | `server/pickleball.js` | 2-player pickleball: the server moves the ball and keeps score |
 | `src/Pickleball2P.jsx` | Draws the 2-player game and sends your swings |
