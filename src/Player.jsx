@@ -84,13 +84,14 @@ export default function Player() {
     }
     const onKey = (e) => {
       if (isTyping(e)) return
-      // J = jump, K = dive (a kickflip on the skateboard).
+      // J = jump, K = dive. On the skateboard Shift is the kickflip instead.
       // Space also jumps while walking or skating (in pickleball Space is for hitting)
-      if (e.code === 'KeyJ' || (e.code === 'Space' && (getGame().mode === 'walk' || getGame().mode === 'skate'))) {
+      const skating = getGame().mode === 'skate'
+      if (e.code === 'KeyJ' || (e.code === 'Space' && (getGame().mode === 'walk' || skating))) {
         e.preventDefault()
         playerState.jumpRequest = true
       }
-      if (e.code === 'KeyK') playerState.diveRequest = true
+      if (skating ? (e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !e.repeat : e.code === 'KeyK') playerState.diveRequest = true
       if (e.code === 'KeyC') playerState.sitRequest = true
       if (e.code !== 'KeyV') return
       const v = view.current
@@ -213,7 +214,9 @@ export default function Player() {
       // Start from how fast the body really moved (ramps and walls slow you down).
       let rolling = Math.hypot(velocity.x, velocity.z)
       if (rolling > 0.3) sk.heading = Math.atan2(velocity.x, velocity.z)
-      const top = run ? SKATE.fast : SKATE.push
+      // Shift is the kickflip on the board, so on a keyboard W always pushes to full speed.
+      // On a phone, push the joystick all the way to go faster.
+      const top = touchInput.active && !run ? SKATE.push : SKATE.fast
       if (grounded) {
         if (moving) {
           const want = Math.atan2(direction.x, direction.z)

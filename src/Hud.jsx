@@ -121,7 +121,7 @@ export default function Hud() {
             {game.mode === 'skate' ? 'OLLIE' : 'JUMP'}<small>{game.mode === 'skate' ? 'Space' : 'J'}</small>
           </button>
           <button tabIndex={-1} onPointerDown={(e) => { e.preventDefault(); playerState.diveRequest = true }}>
-            {game.mode === 'skate' ? 'FLIP' : 'DIVE'}<small>K</small>
+            {game.mode === 'skate' ? 'FLIP' : 'DIVE'}<small>{game.mode === 'skate' ? 'Shift' : 'K'}</small>
           </button>
           {game.mode === 'walk' && (
             <button tabIndex={-1} onPointerDown={(e) => { e.preventDefault(); playerState.sitRequest = true }}>
@@ -209,7 +209,7 @@ function SkateHud({ game }) {
       {game.message && <div className="game-message">{game.message}</div>}
       {!game.touch && (
         <div className="help">
-          W push · A / D turn · Shift faster · SPACE ollie · K kickflip · Ride the ramps to fly · Q to give the board back
+          W push · A / D turn · SPACE ollie · Shift kickflip · Ride the ramps to fly · Q to give the board back
         </div>
       )}
     </>
