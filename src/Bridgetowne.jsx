@@ -9,7 +9,7 @@ import {
   lamps, palms, trees, traffic,
 } from './bridgetowne.js'
 import {
-  Box, Solid, Victor, Coils, Opus, GbfCenter, QcTowers, Palm, DoubleLamp, Bollard, Bowl, Railing,
+  Box, Solid, Victor, Coils, Opus, GbfCenter, Towers, Palm, DoubleLamp, Bollard, Bowl, Railing,
 } from './BridgetowneLandmarks.jsx'
 
 const LENGTH = END - START + 20
@@ -132,23 +132,25 @@ function Plazas() {
   const paving = '#d6d0c4'
   return (
     <>
+      {/* The Victor's plaza, and the walk by the river on the right after the bridge */}
       <Patch x={[WALK_EDGE, 45]} z={[-86, -38]} color={paving} />
-      <Patch x={[WALK_EDGE, 16]} z={[-200, -86]} color={paving} />
       <Patch x={[45, HALF_WIDTH]} z={[-40, RIVER[0]]} color={paving} />
       <Patch x={[WALK_EDGE, 45]} z={[-38, RIVER[0]]} color={paving} />
-      <Patch x={[-HALF_WIDTH, -WALK_EDGE]} z={[-40, RIVER[0]]} color={paving} />
-      <Patch x={[-16.2, -WALK_EDGE]} z={[-175, SIDE_ROAD[0]]} color={paving} />
-      {/* Riverside walk on the QC side: wooden deck with little lamp posts */}
-      <Patch x={[-HALF_WIDTH, -WALK_EDGE]} z={[RIVER[1], 38]} y={0.03} map={deckTexture([30, 5])} />
+      {/* In front of Opus and GBF Center, and the walk by the river on the right before the bridge */}
+      <Patch x={[WALK_EDGE, 16]} z={[36, 160]} color={paving} />
+      <Patch x={[WALK_EDGE, HALF_WIDTH]} z={[RIVER[1], 36]} color={paving} />
+      <Patch x={[-16.2, -WALK_EDGE]} z={[SIDE_ROAD[1], 165]} color={paving} />
+      {/* Riverside walk in front of the towers being built: wooden deck with little lamp posts */}
+      <Patch x={[-HALF_WIDTH, -WALK_EDGE]} z={[-38, RIVER[0]]} y={0.03} map={deckTexture([30, 5])} />
       {[-18, -30, -42, -54, -66].map((x) => (
         <group key={x}>
-          <Box size={[0.14, 3.2, 0.14]} position={[x, 1.6, RIVER[1] + 1.2]} color="#25292d" />
-          <Box size={[0.4, 0.5, 0.4]} position={[x, 3.4, RIVER[1] + 1.2]} color="#25292d" />
+          <Box size={[0.14, 3.2, 0.14]} position={[x, 1.6, RIVER[0] - 1.2]} color="#25292d" />
+          <Box size={[0.4, 0.5, 0.4]} position={[x, 3.4, RIVER[0] - 1.2]} color="#25292d" />
         </group>
       ))}
       {/* Wooden bench on the deck */}
-      <Box size={[3, 0.45, 0.6]} position={[-36, 0.25, 32]} color="#c9b49a" />
-      <Solid x={[-37.5, -34.5]} y={[0, 0.45]} z={[31.7, 32.3]} />
+      <Box size={[3, 0.45, 0.6]} position={[-36, 0.25, -32]} color="#c9b49a" />
+      <Solid x={[-37.5, -34.5]} y={[0, 0.45]} z={[-32.3, -31.7]} />
     </>
   )
 }
@@ -170,7 +172,7 @@ function Railings() {
   const bank = 0.3
   return (
     <>
-      <Railing from={[-12.1, -38]} to={[-12.1, 30]} />
+      <Railing from={[-12.1, -30]} to={[-12.1, 38]} />
       <Railing from={[12.1, -38]} to={[12.1, 38]} />
       {[RIVER[0] - bank, RIVER[1] + bank].map((z) => (
         <group key={z}>
@@ -182,7 +184,7 @@ function Railings() {
   )
 }
 
-const LEFT_ARCHES = [[-18, 8, 10], [8, 6, 9]]
+const LEFT_ARCHES = [[-10, 8, 10], [18, 6, 9]]
 const RIGHT_ARCHES = [[-6, 10, 11], [24, 6, 8]]
 const bollards = Array.from({ length: 51 }, (_, i) => -60 + i * 2.4)
 const bowls = [-43, -29, -15, -1, 13, 27, 41, 55]
@@ -199,11 +201,11 @@ export default memo(function Bridgetowne() {
         <Railings />
 
         <Victor />
-        <Coils side={-1} z0={-40} z1={30} arches={LEFT_ARCHES} />
+        <Coils side={-1} z0={-30} z1={44} arches={LEFT_ARCHES} />
         <Coils side={1} z0={-40} z1={44} arches={RIGHT_ARCHES} />
         <Opus />
         <GbfCenter />
-        <QcTowers />
+        <Towers />
 
         {lamps.map((z) => <DoubleLamp key={z} z={z} />)}
         {bollards.map((z) => [-1, 1].map((s) => <Bollard key={`${s}${z}`} x={s * (CAR_EDGE + 0.15)} z={z} />))}

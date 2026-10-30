@@ -5,8 +5,8 @@ chat, voice, pickleball with Edson, and your own character. (From the maker of K
 
 There are two places to hang out (pick one on the start screen under **Saan tayo?**):
 - **Taytay (TNLF)**: the street at Taytay New Life Fellowship, with Edson and pickleball.
-- **Bridgetowne, Pasig**: the bridge over the Pasig River with the rattan coils, The Victor,
-  Opus and GBF Center, and the round towers being built on the QC side. You start on the QC side of the bridge.
+- **Bridgetowne, Pasig**: you start between GBF Center (left) and Opus (right), then cross the bridge
+  over the Pasig River with the rattan coils. After the bridge: The Victor on the right, the round towers being built on the left.
   Friends have to pick the same place and the same room code to see each other.
 
 A box character walking around a simple 3D street.
@@ -143,7 +143,7 @@ everyone. Tap **Tapos na** to stop watching.
 | `src/maps.js` | The places you can pick (Taytay, Bridgetowne): where you start, how far you can see |
 | `src/bridgetowne.js` | **Bridgetowne layout: road and bridge sizes, palms, trees, street lights, traffic. Edit this!** |
 | `src/Bridgetowne.jsx` | Bridgetowne: the ground, river, bridge, road, sidewalks, railings, and puts everything in place |
-| `src/BridgetowneLandmarks.jsx` | The Victor, the rattan coils, Opus, GBF Center, the QC towers, palms, bollards |
+| `src/BridgetowneLandmarks.jsx` | The Victor, the rattan coils, Opus, GBF Center, the towers being built, palms, bollards |
 | `src/dialogue.js` | **Everything Edson says. Edit it to change the conversation!** |
 | `src/timeOfDay.js` | Colors and lights for noon, afternoon and night. Tweak them here! |
 | `src/NightLights.jsx` | Street lights and glowing lights that turn on at night |
