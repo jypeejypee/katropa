@@ -8,12 +8,19 @@ import { signTexture } from './textures.js'
 
 // All vehicles are built facing +z (forward)
 
+// A tire with a silver rim
 function Wheel({ position, r = 0.3, w = 0.15 }) {
   return (
-    <mesh castShadow position={position} rotation={[0, 0, Math.PI / 2]}>
-      <cylinderGeometry args={[r, r, w, 14]} />
-      <meshStandardMaterial color="#1b1b1b" roughness={0.9} />
-    </mesh>
+    <group position={position} rotation={[0, 0, Math.PI / 2]}>
+      <mesh castShadow>
+        <cylinderGeometry args={[r, r, w, 16]} />
+        <meshStandardMaterial color="#1b1b1b" roughness={0.9} />
+      </mesh>
+      <mesh>
+        <cylinderGeometry args={[r * 0.58, r * 0.58, w + 0.02, 12]} />
+        <meshStandardMaterial color="#b9bdc2" metalness={0.7} roughness={0.3} />
+      </mesh>
+    </group>
   )
 }
 
@@ -125,38 +132,166 @@ export function Jeep({ color = '#4f6b3a' }) {
   )
 }
 
-export function Motorbike({ color = '#1e3a8a' }) {
+// A side outline (z, y points) pushed out sideways into a solid piece, centered on x = 0.
+// The rounded edge makes it `bevel` bigger all around the outline.
+function sideShape(points, width, bevel = 0.05) {
+  const shape = new THREE.Shape()
+  points.forEach(([z, y], i) => (i ? shape.lineTo(z, y) : shape.moveTo(z, y)))
+  const depth = width - bevel * 2
+  const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 2, curveSegments: 6 })
+  g.rotateY(-Math.PI / 2) // outline x becomes z, the push goes along x
+  g.translate(depth / 2, 0, 0)
+  g.computeVertexNormals()
+  return g
+}
+
+// A rounded stick from one point to another (the scooter rider's arms and legs)
+const yAxis = new THREE.Vector3(0, 1, 0)
+function Limb({ from, to, r, color }) {
+  const a = new THREE.Vector3(...from)
+  const b = new THREE.Vector3(...to)
+  const dir = b.clone().sub(a)
+  return (
+    <mesh castShadow position={a.clone().add(b).multiplyScalar(0.5)}
+      quaternion={new THREE.Quaternion().setFromUnitVectors(yAxis, dir.clone().normalize())}>
+      <capsuleGeometry args={[r, dir.length(), 3, 8]} />
+      <meshStandardMaterial color={color} />
+    </mesh>
+  )
+}
+
+// Scooter (like the ones everyone rides here): legshield in front, flat floor, seat over the engine
+let scooterBody
+export function Motorbike({ color = '#1e3a8a', driver = false }) {
+  scooterBody ??= sideShape([
+    [0.56, 0.44], [0.44, 1.0], [0.3, 1.02], [0.2, 0.42], [-0.16, 0.42], [-0.22, 0.62],
+    [-0.94, 0.74], [-0.99, 0.6], [-0.62, 0.36], [-0.25, 0.24], [0.34, 0.24],
+  ], 0.34, 0.03)
+  const dark = '#151515'
   return (
     <group>
-      <Box size={[0.25, 0.4, 1.3]} position={[0, 0.6, 0]} color={color} />
-      <Box size={[0.24, 0.1, 0.6]} position={[0, 0.85, -0.2]} color="#111" />
-      <Box size={[0.65, 0.04, 0.04]} position={[0, 1.0, 0.55]} color="#333" />
-      <Wheel position={[0, 0.28, 0.6]} r={0.28} w={0.1} />
-      <Wheel position={[0, 0.28, -0.6]} r={0.28} w={0.1} />
+      <mesh castShadow geometry={scooterBody}>
+        <meshStandardMaterial color={color} metalness={0.4} roughness={0.35} />
+      </mesh>
+      {/* Seat, front fork and fender, handlebar with the headlight */}
+      <Box size={[0.3, 0.09, 0.72]} position={[0, 0.74, -0.58]} rotation={[0.14, 0, 0]} color={dark} roughness={0.8} />
+      <Box size={[0.12, 0.72, 0.06]} position={[0, 0.6, 0.55]} rotation={[-0.24, 0, 0]} color="#8d9196" metalness={0.6} />
+      <Box size={[0.17, 0.05, 0.4]} position={[0, 0.58, 0.64]} color={color} metalness={0.4} roughness={0.35} />
+      <Box size={[0.46, 0.15, 0.22]} position={[0, 1.06, 0.4]} color={color} metalness={0.4} roughness={0.35} />
+      <Box size={[0.22, 0.08, 0.03]} position={[0, 1.04, 0.52]} color="#fffbe8" emissive="#fff3c4" emissiveIntensity={0.5} />
+      <Box size={[0.72, 0.035, 0.035]} position={[0, 1.1, 0.34]} color="#2a2a2a" />
+      {[-1, 1].map((sd) => (
+        <group key={sd}>
+          <Box size={[0.08, 0.05, 0.05]} position={[sd * 0.36, 1.1, 0.34]} color={dark} />
+          <Box size={[0.02, 0.22, 0.02]} position={[sd * 0.22, 1.22, 0.4]} rotation={[0, 0, sd * -0.35]} color="#2a2a2a" />
+          <Box size={[0.11, 0.07, 0.02]} position={[sd * 0.27, 1.33, 0.41]} color="#2a2a2a" />
+        </group>
+      ))}
+      {/* Tail light and exhaust */}
+      <Box size={[0.2, 0.06, 0.03]} position={[0, 0.68, -0.99]} color="#c0262c" emissive="#ff2a2a" emissiveIntensity={0.25} />
+      <mesh castShadow position={[0.19, 0.3, -0.45]} rotation={[Math.PI / 2 + 0.15, 0, 0]}>
+        <cylinderGeometry args={[0.045, 0.05, 0.5, 8]} />
+        <meshStandardMaterial color="#a7abb0" metalness={0.8} roughness={0.25} />
+      </mesh>
+      <Wheel position={[0, 0.27, 0.64]} r={0.27} w={0.1} />
+      <Wheel position={[0, 0.27, -0.64]} r={0.27} w={0.1} />
+      {driver && <Rider />}
     </group>
   )
 }
 
-// Car (sedan), or an SUV when suv is set
-export function Car({ color = '#e8e8e8', suv = false, driver = false }) {
-  const h = suv ? 0.9 : 0.65 // body height
-  const paint = { color, metalness: 0.5, roughness: 0.35 }
+// Someone riding the scooter, with a helmet
+function Rider() {
+  const shirt = '#e9e6df'
+  const pants = '#2b3445'
+  const skin = '#a8754f'
   return (
     <group>
-      <Box size={[1.8, h, 4.4]} position={[0, 0.3 + h / 2, 0]} {...paint} />
-      <Box size={[1.6, 0.6, suv ? 2.9 : 2.2]} position={[0, 0.6 + h, suv ? -0.35 : -0.2]} color="#26313a" roughness={0.15} metalness={0.3} />
-      <Box size={[1.62, 0.07, suv ? 2.7 : 1.7]} position={[0, 0.93 + h, suv ? -0.4 : -0.25]} {...paint} />
-      {[-0.62, 0.62].map((x) => (
-        <group key={x}>
-          <Box size={[0.32, 0.12, 0.03]} position={[x, 0.2 + h, 2.2]} color="#f4f4f0" emissive="#fff6d8" emissiveIntensity={0.3} />
-          <Box size={[0.32, 0.12, 0.03]} position={[x, 0.2 + h, -2.2]} color="#c0262c" />
+      <Box size={[0.36, 0.5, 0.22]} position={[0, 1.08, -0.3]} rotation={[0.2, 0, 0]} color={shirt} />
+      <mesh castShadow position={[0, 1.47, -0.2]}>
+        <sphereGeometry args={[0.15, 14, 10]} />
+        <meshStandardMaterial color="#202326" metalness={0.3} roughness={0.3} />
+      </mesh>
+      <Box size={[0.2, 0.08, 0.04]} position={[0, 1.45, -0.06]} color="#4b5a66" roughness={0.1} />
+      {[-1, 1].map((sd) => (
+        <group key={sd}>
+          <Limb from={[sd * 0.2, 1.27, -0.24]} to={[sd * 0.3, 1.08, 0.33]} r={0.05} color={shirt} />
+          <Limb from={[sd * 0.11, 0.84, -0.36]} to={[sd * 0.15, 0.86, 0.06]} r={0.075} color={pants} />
+          <Limb from={[sd * 0.15, 0.86, 0.06]} to={[sd * 0.13, 0.48, 0.14]} r={0.06} color={pants} />
+          <Box size={[0.1, 0.07, 0.22]} position={[sd * 0.13, 0.46, 0.2]} color="#222" />
+          <mesh position={[sd * 0.31, 1.07, 0.35]}>
+            <sphereGeometry args={[0.045, 8, 6]} />
+            <meshStandardMaterial color={skin} />
+          </mesh>
         </group>
       ))}
-      <Plate text="NFT 4821" position={[0, 0.5, -2.21]} />
-      {[[-0.85, 1.4], [0.85, 1.4], [-0.85, -1.4], [0.85, -1.4]].map(([x, z], i) => (
-        <Wheel key={i} position={[x, 0.33, z]} r={0.33} w={0.22} />
+    </group>
+  )
+}
+
+// Car (sedan), or an SUV when suv is set. Rounded body with wheel arches, glass cabin, lights.
+const carParts = {}
+function carShapes(suv) {
+  if (carParts[suv]) return carParts[suv]
+  const wy = suv ? 0.36 : 0.33 // wheel middle height
+  const ar = suv ? 0.45 : 0.42 // wheel arch size
+  const low = suv ? 0.38 : 0.3 // bottom of the body
+  const top = suv ? 1.2 : 0.95 // where the windows start
+  // the bottom edge goes up and around each wheel
+  const arch = (z) => Array.from({ length: 9 }, (_, i) => {
+    const a = Math.PI - (i / 8) * Math.PI
+    return [z + Math.cos(a) * ar, Math.max(low, wy + Math.sin(a) * ar)]
+  })
+  const body = sideShape([
+    [-2.2, low + 0.02], ...arch(-1.4), ...arch(1.4), [2.2, low + 0.02],
+    [2.24, low + 0.36], [2.16, top - 0.15], [suv ? 1.25 : 1.05, top - 0.02], [suv ? 0.95 : 0.85, top],
+    ...(suv ? [[-2.15, top], [-2.24, top - 0.2]] : [[-1.35, top], [-2.12, top - 0.04], [-2.24, top - 0.25]]),
+  ], 1.8, 0.08)
+  const cabin = sideShape(suv
+    ? [[0.95, top - 0.02], [0.3, top + 0.55], [-2.02, top + 0.55], [-2.16, top - 0.02]]
+    : [[0.88, top - 0.02], [0.2, top + 0.47], [-0.85, top + 0.47], [-1.38, top - 0.02]], 1.56, 0.04)
+  carParts[suv] = { body, cabin, wy, top }
+  return carParts[suv]
+}
+
+export function Car({ color = '#e8e8e8', suv = false, driver = false }) {
+  const { body, cabin, wy, top } = carShapes(suv)
+  const paint = { color, metalness: 0.5, roughness: 0.32 }
+  const roofTop = top + (suv ? 0.55 : 0.47)
+  const light = top - 0.24 // headlights and tail lights
+  return (
+    <group>
+      <mesh castShadow receiveShadow geometry={body}>
+        <meshStandardMaterial {...paint} />
+      </mesh>
+      <mesh castShadow geometry={cabin}>
+        <meshStandardMaterial color="#1f2830" metalness={0.4} roughness={0.08} />
+      </mesh>
+      {/* Painted roof, the pillar between the doors, roof rails on the SUV */}
+      <Box size={[1.5, 0.05, suv ? 2.25 : 1.0]} position={[0, roofTop + 0.02, suv ? -0.85 : -0.33]} {...paint} />
+      {[-1, 1].map((sd) => (
+        <Box key={sd} size={[0.03, roofTop - top, 0.1]} position={[sd * 0.79, (top + roofTop) / 2, suv ? -0.45 : -0.3]} color="#151a1f" />
       ))}
-      {driver && <Driver position={[-0.4, 0.5, 0.1]} />}
+      {suv && [-0.62, 0.62].map((x) => <Box key={x} size={[0.05, 0.06, 2.1]} position={[x, roofTop + 0.07, -0.85]} color="#222" />)}
+      {/* Front grille, bumpers, lights, mirrors, door handles and door lines */}
+      <Box size={[0.95, 0.2, 0.04]} position={[0, light - 0.1, 2.33]} color="#111" />
+      <Box size={[1.7, 0.16, 0.12]} position={[0, wy + 0.06, 2.29]} color="#2b2e33" roughness={0.6} />
+      <Box size={[1.7, 0.16, 0.12]} position={[0, wy + 0.06, -2.29]} color="#2b2e33" roughness={0.6} />
+      {[-1, 1].map((sd) => (
+        <group key={sd}>
+          <Box size={[0.38, 0.11, 0.05]} position={[sd * 0.62, light, 2.32]} color="#f4f4f0" emissive="#fff6d8" emissiveIntensity={0.4} />
+          <Box size={[0.42, 0.1, 0.05]} position={[sd * 0.62, light, -2.32]} color="#b0141c" emissive="#ff1a1a" emissiveIntensity={0.25} />
+          <Box size={[0.16, 0.1, 0.07]} position={[sd * 0.97, top + 0.06, 0.72]} {...paint} />
+          <Box size={[0.02, 0.03, 0.16]} position={[sd * 0.915, top - 0.14, -0.15]} color="#2a2a2a" />
+          <Box size={[0.02, top - wy - 0.15, 0.02]} position={[sd * 0.915, (top + wy) / 2 + 0.02, suv ? 0.05 : -0.2]} color="#1c1c1c" />
+        </group>
+      ))}
+      <Plate text="NFT 4821" position={[0, wy + 0.26, -2.34]} />
+      <Plate text="NFT 4821" position={[0, wy + 0.26, 2.36]} rotation={[0, 0, 0]} />
+      {[[-0.82, 1.4], [0.82, 1.4], [-0.82, -1.4], [0.82, -1.4]].map(([x, z], i) => (
+        <Wheel key={i} position={[x, wy, z]} r={wy} w={0.24} />
+      ))}
+      {driver && <Driver position={[-0.4, top - 0.45, 0.05]} />}
     </group>
   )
 }
