@@ -82,7 +82,7 @@ function Ball({ position, r, scale, material }) {
 // ---------- The Victor ----------
 // The giant silver man with his right fist up, at the Pasig end of the bridge.
 // Built facing -z, so you see his back when you walk over the bridge (like in the photos).
-// His right side is +x.
+// His right side is +x. He stands on the right side of the road, just past the bridge.
 export function Victor() {
   const m = victorMaterial
   const base = 1.2 // height of the round planter he stands on
@@ -213,9 +213,9 @@ export function Coils({ side, z0, z1, arches }) {
 }
 
 // ---------- Opus ----------
-// The long mall on the right at the Pasig end: dark fins, big copper hexagon panels in gold frames,
+// The long mall on the right at the Pasig end, past The Victor: dark fins, big copper hexagon panels in gold frames,
 // the orange drive-through, and the dark tower next to the bridge.
-const OPUS = { x0: 16, x1: 66, z0: -172, z1: -40, h: 30 }
+const OPUS = { x0: 16, x1: 66, z0: -200, z1: -88, h: 30 }
 
 // Copper hexagons in a gold frame on the front of Opus
 function HexPanel({ z0, z1, y0, y1 }) {
@@ -247,32 +247,32 @@ export function Opus() {
       <Box size={[2, 0.3, len]} position={[x0 - 1, 5.6, zm]} color="#1e1f21" />
       <Box size={[0.3, 0.3, len]} position={[x0 - 0.15, h - 0.15, zm]} color={GOLD} metalness={0.5} roughness={0.4} />
 
-      <HexPanel z0={-62} z1={-46} y0={8} y1={24} />
-      <HexPanel z0={-84} z1={-67} y0={9} y1={29} />
-      <HexPanel z0={-122} z1={-104} y0={7} y1={29} />
-      <HexPanel z0={-150} z1={-138} y0={10} y1={28} />
-      <HexPanel z0={-169} z1={-160} y0={12} y1={26} />
+      <HexPanel z0={-106} z1={-92} y0={8} y1={24} />
+      <HexPanel z0={-140} z1={-126} y0={9} y1={29} />
+      <HexPanel z0={-166} z1={-148} y0={7} y1={29} />
+      <HexPanel z0={-186} z1={-174} y0={10} y1={28} />
+      <HexPanel z0={-198} z1={-190} y0={12} y1={26} />
 
       {/* Orange drive-through with lights in the ceiling */}
-      <Face facing="west" x={x0 - 0.05} y={5} z={-93} w={14} h={10} color="#15171a" />
-      {[-98.8, -87.2].map((z) => <Box key={z} size={[0.7, 13, 1.6]} position={[x0 - 0.35, 6.5, z]} color="#c4683e" />)}
-      <Box size={[0.7, 3, 14]} position={[x0 - 0.35, 11.5, -93]} color="#c4683e" />
-      {[-96, -93, -90].map((z) => (
+      <Face facing="west" x={x0 - 0.05} y={5} z={-115} w={14} h={10} color="#15171a" />
+      {[-120.8, -109.2].map((z) => <Box key={z} size={[0.7, 13, 1.6]} position={[x0 - 0.35, 6.5, z]} color="#c4683e" />)}
+      <Box size={[0.7, 3, 14]} position={[x0 - 0.35, 11.5, -115]} color="#c4683e" />
+      {[-118, -115, -112].map((z) => (
         <mesh key={z} position={[x0 - 0.07, 9.4, z]} rotation={[0, -Math.PI / 2, 0]}>
           <planeGeometry args={[0.6, 0.3]} />
           <meshStandardMaterial color="#fff2cc" emissive="#fff2cc" emissiveIntensity={0.8} />
         </mesh>
       ))}
 
-      {/* Glass box at the corner by the bridge */}
+      {/* Glass box at the corner by The Victor */}
       <Solid x={[16.5, 23.5]} y={[0, 14]} z={[z1, z1 + 4]} />
       <Box size={[7, 8, 4]} position={[20, 10, z1 + 2]} color="#cfdde8" map={glassTexture([2, 3])} metalness={0.3} roughness={0.15} />
       {/* The tower: dark with gold fins */}
-      <Box size={[24, 76, 30]} position={[34, h + 38, -61]} color="#ffffff" map={finTexture([7, 38])} />
-      {[[22, -76], [46, -76], [22, -46], [46, -46]].map(([x, z]) => (
+      <Box size={[24, 76, 30]} position={[34, h + 38, -103]} color="#ffffff" map={finTexture([7, 38])} />
+      {[[22, -118], [46, -118], [22, -88], [46, -88]].map(([x, z]) => (
         <Box key={`${x}${z}`} size={[0.6, 76, 0.6]} position={[x, h + 38, z]} color={GOLD} metalness={0.5} roughness={0.4} />
       ))}
-      <Box size={[25, 2, 31]} position={[34, h + 77, -61]} color="#1e2023" />
+      <Box size={[25, 2, 31]} position={[34, h + 77, -103]} color="#1e2023" />
     </>
   )
 }
@@ -281,30 +281,30 @@ export function Opus() {
 // Office tower on the left, across the side street: grey louvers over the parking floors,
 // a glass corner, white pillars, and MERIENDA on the ground floor.
 export function GbfCenter() {
-  const zm = -127
+  const zm = -150
   return (
     <>
-      <Solid x={[-50, -16.2]} y={[0, 41]} z={[-152, -102]} />
+      <Solid x={[-50, -16.2]} y={[0, 41]} z={[-175, -125]} />
       <Box size={[33, 5, 49]} position={[-33.5, 2.5, zm]} color="#2a3036" />
       <Face facing="east" x={-16.98} y={2.5} z={zm} w={49} h={5} map={glassTexture([16, 2])} color="#e8eff3" />
       {Array.from({ length: 8 }, (_, i) => (
-        <Box key={i} size={[0.9, 5, 0.9]} position={[-16.6, 2.5, -150 + i * 6.7]} color="#d9d5ce" />
+        <Box key={i} size={[0.9, 5, 0.9]} position={[-16.6, 2.5, -173 + i * 6.7]} color="#d9d5ce" />
       ))}
       <Box size={[2.2, 0.35, 50]} position={[-16.4, 5.1, zm]} color="#c9c6c0" />
-      <Face facing="east" x={-16.9} y={3.9} z={-121} w={6} h={0.9}
+      <Face facing="east" x={-16.9} y={3.9} z={-144} w={6} h={0.9}
         map={signTexture({ text: 'MERIENDA by Pan de Manila', bg: '#222222', fg: '#ffffff' }, 6, 0.9)} />
       {/* Parking floors behind louvers */}
       <Box size={[34, 29, 50]} position={[-33, 19.5, zm]} color="#ffffff" map={greyLouverTexture([10, 10])} />
       {/* Glass corner and the tower */}
-      <Box size={[8.4, 36, 8.4]} position={[-20.6, 23, -106]} color="#cfdbe4" map={glassTexture([3, 12])} metalness={0.3} roughness={0.15} />
-      <mesh castShadow receiveShadow position={[-34, 75, -128]} material={nightGlass}>
+      <Box size={[8.4, 36, 8.4]} position={[-20.6, 23, -129]} color="#cfdbe4" map={glassTexture([3, 12])} metalness={0.3} roughness={0.15} />
+      <mesh castShadow receiveShadow position={[-34, 75, -151]} material={nightGlass}>
         <boxGeometry args={[28, 82, 40]} />
       </mesh>
       {/* Black stone sign at the corner */}
-      <Box size={[0.8, 2.4, 3]} position={[-14.6, 1.2, -99]} color="#1d1d1f" roughness={0.3} />
-      <Face facing="east" x={-14.18} y={1.5} z={-99} w={2.4} h={1}
+      <Box size={[0.8, 2.4, 3]} position={[-14.6, 1.2, -122]} color="#1d1d1f" roughness={0.3} />
+      <Face facing="east" x={-14.18} y={1.5} z={-122} w={2.4} h={1}
         map={signTexture({ text: 'GBF CENTER', bg: '#1d1d1f', fg: '#e6e6e6' }, 2.4, 1)} />
-      <Solid x={[-15, -14.2]} y={[0, 2.4]} z={[-100.5, -97.5]} />
+      <Solid x={[-15, -14.2]} y={[0, 2.4]} z={[-123.5, -120.5]} />
     </>
   )
 }

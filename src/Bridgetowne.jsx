@@ -132,12 +132,12 @@ function Plazas() {
   const paving = '#d6d0c4'
   return (
     <>
-      <Patch x={[-45, -WALK_EDGE]} z={[-82, -38]} color={paving} />
-      <Patch x={[WALK_EDGE, 16]} z={[-172, -38]} color={paving} />
-      <Patch x={[WALK_EDGE, HALF_WIDTH]} z={[-40, RIVER[0]]} color={paving} />
-      <Patch x={[-HALF_WIDTH, -45]} z={[-40, RIVER[0]]} color={paving} />
-      <Patch x={[-45, -WALK_EDGE]} z={[-38, RIVER[0]]} color={paving} />
-      <Patch x={[-16.2, -WALK_EDGE]} z={[-152, SIDE_ROAD[0]]} color={paving} />
+      <Patch x={[WALK_EDGE, 45]} z={[-86, -38]} color={paving} />
+      <Patch x={[WALK_EDGE, 16]} z={[-200, -86]} color={paving} />
+      <Patch x={[45, HALF_WIDTH]} z={[-40, RIVER[0]]} color={paving} />
+      <Patch x={[WALK_EDGE, 45]} z={[-38, RIVER[0]]} color={paving} />
+      <Patch x={[-HALF_WIDTH, -WALK_EDGE]} z={[-40, RIVER[0]]} color={paving} />
+      <Patch x={[-16.2, -WALK_EDGE]} z={[-175, SIDE_ROAD[0]]} color={paving} />
       {/* Riverside walk on the QC side: wooden deck with little lamp posts */}
       <Patch x={[-HALF_WIDTH, -WALK_EDGE]} z={[RIVER[1], 38]} y={0.03} map={deckTexture([30, 5])} />
       {[-18, -30, -42, -54, -66].map((x) => (
@@ -210,7 +210,7 @@ export default memo(function Bridgetowne() {
         {bowls.map((z, i) => <Bowl key={z} x={0} z={z} seed={i + 1} />)}
         {/* Bowls around The Victor (only on the plaza side, not toward the road) */}
         {[0, 1, 2, 3, 4].map((i) => {
-          const a = Math.PI / 2 + (i / 4) * Math.PI
+          const a = -Math.PI / 2 + (i / 4) * Math.PI
           return <Bowl key={`v${i}`} x={VICTOR.x + Math.cos(a) * 15} z={VICTOR.z + Math.sin(a) * 15} seed={i + 20} />
         })}
         {palms.map(([x, z], i) => <Palm key={i} x={x} z={z} height={11 + (i % 3) * 1.5} seed={i + 1} />)}
