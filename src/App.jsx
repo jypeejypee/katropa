@@ -81,7 +81,8 @@ export default function App() {
             intensity={time.hemi * (low && time.lamps ? 1.8 : 1)} />
           <Sun time={time} low={low} />
           <NightLights brightness={time.lamps} low={low} map={map} />
-          <Physics gravity={[0, -9.81, 0]}>
+          {/* updatePriority -1: physics moves everything first, then the camera follows (see Player.jsx) */}
+          <Physics gravity={[0, -9.81, 0]} updatePriority={-1}>
             {taytay ? <Street /> : <Bridgetowne />}
             <Player />
             {taytay ? <Npc /> : <Andrew />}

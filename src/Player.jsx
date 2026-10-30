@@ -329,9 +329,13 @@ export default function Player() {
     limbs.current.motion.skate = skating
 
     // 5. Camera
+    // Follow where the body is drawn, not the raw physics position: physics moves in fixed steps
+    // (60 a second) and the drawing glides between them. Following the steps made the view shake
+    // when running or skating on screens that aren't exactly 60 frames a second (phones, 120/144 Hz).
+    const shown = model.current.parent.position
     model.current.visible = !v.firstPerson
     if (v.firstPerson) {
-      state.camera.position.set(pos.x, pos.y + EYE_HEIGHT, pos.z)
+      state.camera.position.set(shown.x, shown.y + EYE_HEIGHT, shown.z)
       lookTarget.set(
         -Math.sin(v.yaw) * Math.cos(v.pitch),
         -Math.sin(v.pitch),
@@ -341,7 +345,7 @@ export default function Player() {
       return
     }
 
-    lookTarget.set(pos.x, pos.y + 0.8, pos.z)
+    lookTarget.set(shown.x, shown.y + 0.8, shown.z)
     offset.set(Math.sin(v.yaw) * Math.cos(v.pitch), Math.sin(v.pitch), Math.cos(v.yaw) * Math.cos(v.pitch))
     // Pull the camera closer if a wall or tree is between it and the player
     let distance = CAMERA_DISTANCE
