@@ -2,6 +2,7 @@ import { memo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import StaticBatch from './StaticBatch.jsx'
+import NightRiver, { RIVER_LAMPS, LAMP_BANK } from './NightRiver.jsx'
 import { Skatepark } from './Skatepark.jsx'
 import { Tree } from './Props.jsx'
 import { Traffic } from './Vehicles.jsx'
@@ -151,12 +152,13 @@ function Plazas() {
       <Patch x={[-16.2, -WALK_EDGE]} z={[SIDE_ROAD[1], 105]} color={paving} />
       {/* Riverside walk in front of the towers being built: wooden deck with little lamp posts */}
       <Patch x={[-HALF_WIDTH, -WALK_EDGE]} z={[-38, RIVER[0]]} y={0.03} map={deckTexture([30, 5])} />
-      {[-18, -30, -42, -54, -66].map((x) => (
-        <group key={x}>
-          <Box size={[0.14, 3.2, 0.14]} position={[x, 1.6, RIVER[0] - 1.2]} color="#25292d" />
-          <Box size={[0.4, 0.5, 0.4]} position={[x, 3.4, RIVER[0] - 1.2]} color="#25292d" />
+      {/* (and the same lamp posts on the other bank; they light up at night, see NightRiver.jsx) */}
+      {RIVER_LAMPS.flatMap((x) => [RIVER[0] - LAMP_BANK, RIVER[1] + LAMP_BANK].map((z) => (
+        <group key={`${x}|${z}`}>
+          <Box size={[0.14, 3.2, 0.14]} position={[x, 1.6, z]} color="#25292d" />
+          <Box size={[0.4, 0.5, 0.4]} position={[x, 3.4, z]} color="#25292d" />
         </group>
-      ))}
+      )))}
       {/* Wooden bench on the deck */}
       <Box size={[3, 0.45, 0.6]} position={[-36, 0.25, -32]} color="#c9b49a" />
       <Solid x={[-37.5, -34.5]} y={[0, 0.45]} z={[-32.3, -31.7]} />
@@ -232,6 +234,7 @@ export default memo(function Bridgetowne() {
       {/* Moving things stay outside the StaticBatch */}
       <Traffic cars={traffic} start={START} end={END} court={false} />
       <RiverFlow />
+      <NightRiver />
     </>
   )
 })
