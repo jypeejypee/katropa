@@ -37,7 +37,9 @@ function GroundAndRiver() {
   return (
     <>
       {[pasig, qc].map(([z0, z1]) => (
-        <RigidBody key={z0} type="fixed" colliders="cuboid">
+        // the solid floor is set by hand: the StaticBatch merges the mesh away before it could be measured
+        <RigidBody key={z0} type="fixed" colliders={false}>
+          <CuboidCollider args={[wide / 2, 0.5, (z1 - z0) / 2]} position={[0, -0.5, (z0 + z1) / 2]} />
           <mesh receiveShadow position={[0, -0.5, (z0 + z1) / 2]}>
             <boxGeometry args={[wide, 1, z1 - z0]} />
             <meshStandardMaterial color="#6f8048" />
