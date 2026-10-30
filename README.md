@@ -58,7 +58,7 @@ Say *"Sige, laro tayo!"* and a court with a net appears on the road in front of 
 
 After the bridge, on the right between The Victor and the river, there's a skatepark. **Andrew** stands at the corner.
 Press **E** (or tap him) and say *"Sige, pahiram ng board!"* to borrow his skateboard.
-- **W** = push (up to full speed), **A** / **D** = turn (the board keeps rolling when you let go)
+- **W** = push, **A** / **D** = turn (the board keeps rolling when you let go)
 - **Space** = ollie, **Shift** = kickflip (from the ground it pops an ollie too). Land after the board finishes turning, or it's *Sablay!*
 - Ride up the kicker, the funbox and the big bank to fly. Points: ollie 10, kickflip 50, big air 25
 - **Q** = give the board back

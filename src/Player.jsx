@@ -214,9 +214,8 @@ export default function Player() {
       // Start from how fast the body really moved (ramps and walls slow you down).
       let rolling = Math.hypot(velocity.x, velocity.z)
       if (rolling > 0.3) sk.heading = Math.atan2(velocity.x, velocity.z)
-      // Shift is the kickflip on the board, so on a keyboard W always pushes to full speed.
-      // On a phone, push the joystick all the way to go faster.
-      const top = touchInput.active && !run ? SKATE.push : SKATE.fast
+      // Only the admin gets the extra-fast board (on a phone: with the joystick pushed all the way)
+      const top = getGame().admin && (!touchInput.active || run) ? SKATE.fast : SKATE.push
       if (grounded) {
         if (moving) {
           const want = Math.atan2(direction.x, direction.z)

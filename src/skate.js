@@ -29,7 +29,7 @@ export const PARK = { x: [15, 45], z: [-43, -29.5] }
 // How the board feels
 export const SKATE = {
   push: 8, // top speed when pushing (meters per second)
-  fast: 11, // top speed with W on a keyboard (or the joystick all the way)
+  fast: 11, // top speed for the admin only
   accel: 5, // how fast you speed up
   turn: 2.6, // how fast you can turn
   coast: 0.25, // how fast you slow down when you stop pushing
@@ -58,7 +58,7 @@ export const andrewDialogue = {
   },
   howto: {
     text: (game) => game.touch
-      ? 'Madali lang! Joystick para tumulak at lumiko, itulak nang buo para bumilis. OLLIE para tumalon. FLIP para mag-kickflip, dapat tapos ang ikot bago lumapag! Dumaan ka sa mga ramp para lumipad. Stop para ibalik ang board.'
+      ? 'Madali lang! Joystick para tumulak at lumiko. OLLIE para tumalon. FLIP para mag-kickflip, dapat tapos ang ikot bago lumapag! Dumaan ka sa mga ramp para lumipad. Stop para ibalik ang board.'
       : 'Madali lang! W para tumulak, A o D para lumiko. SPACE para mag-ollie. Shift para mag-kickflip, dapat tapos ang ikot bago lumapag! Dumaan ka sa mga ramp para lumipad. Q para ibalik ang board.',
     choices: [
       { label: 'Gets! Pahiram na!', action: 'skate' },
