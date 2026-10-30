@@ -28,6 +28,7 @@ let state = {
   playerName: '',
   avatar: DEFAULT_AVATAR, // your character's look (see avatar.js)
   room: 'tnlf',
+  map: 'tnlf', // which place you walk around in: 'tnlf' or 'bridgetowne' (see maps.js)
   online: 'offline', // 'connecting', 'online' or 'offline'
   others: [], // other players in the room: [{ id, name, color }]
   chat: [], // last chat messages: [{ id, name, color, text, at }]

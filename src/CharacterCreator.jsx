@@ -3,6 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { getGame, setGame } from './game.js'
 import { connect } from './network.js'
+import { MAPS, MAP_ORDER } from './maps.js'
 import { Person } from './Person.jsx'
 import { OPTIONS, LABELS, DEFAULT_AVATAR, GENDER_PRESETS, sanitizeAvatar, randomAvatar } from './avatar.js'
 
@@ -31,6 +32,7 @@ export default function CharacterCreator() {
   const [adminCode, setAdminCode] = useState('') // never saved in the browser
   const isAdminName = name.trim().toLowerCase() === 'jaypee'
   const [room, setRoom] = useState(saved.room ?? 'tnlf')
+  const [map, setMap] = useState(MAPS[saved.map] ? saved.map : 'tnlf')
   const [quality, setQuality] = useState(saved.quality ?? getGame().quality)
   const [avatar, setAvatar] = useState(saved.avatar ? sanitizeAvatar(saved.avatar) : DEFAULT_AVATAR)
   const [tab, setTab] = useState(0)
@@ -44,12 +46,12 @@ export default function CharacterCreator() {
     if (!ready) return
     const player = { name: name.trim().slice(0, 16), room: room.trim().toLowerCase().slice(0, 20) || 'tnlf', avatar }
     try {
-      localStorage.setItem('street-game-player', JSON.stringify({ ...player, quality }))
+      localStorage.setItem('street-game-player', JSON.stringify({ ...player, quality, map }))
     } catch {
       // private window: just don't remember it
     }
-    setGame({ mode: 'walk', playerName: player.name, room: player.room, quality, avatar })
-    connect({ ...player, adminCode: isAdminName ? adminCode : undefined })
+    setGame({ mode: 'walk', playerName: player.name, room: player.room, map, quality, avatar })
+    connect({ ...player, map, adminCode: isAdminName ? adminCode : undefined })
   }
 
   return (
@@ -93,6 +95,14 @@ export default function CharacterCreator() {
             ))}
           </div>
 
+          <div className="map-label">Saan tayo? <span className="hint">(where to hang out)</span></div>
+          <div className="quality-row">
+            {MAP_ORDER.map((m) => (
+              <button key={m} type="button" className={map === m ? 'active' : ''} onClick={() => setMap(m)}>
+                {MAPS[m].label}
+              </button>
+            ))}
+          </div>
           <label className="room-label">
             Room code <span className="hint">(same code = same street as your friends)</span>
             <input value={room} maxLength={20} onChange={(e) => setRoom(e.target.value)} />

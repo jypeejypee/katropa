@@ -387,3 +387,142 @@ export const courtWallTexture = () =>
     ctx.font = 'bold 44px Arial, sans-serif'
     ctx.fillText('HOME OF TEAM ABR', w * 0.62, h * 0.85)
   })
+
+// ---------- Bridgetowne ----------
+
+// Dark grey wall of vertical fins with a thin gold line every few fins (Opus)
+export const finTexture = (repeat) =>
+  makeTexture('fins', 128, 64, (ctx, w, h) => {
+    ctx.fillStyle = '#2b2e32'
+    ctx.fillRect(0, 0, w, h)
+    for (let x = 0; x < w; x += 16) {
+      ctx.fillStyle = '#4f545a'
+      ctx.fillRect(x, 0, 7, h)
+      ctx.fillStyle = '#1f2124'
+      ctx.fillRect(x + 7, 0, 3, h)
+    }
+    ctx.fillStyle = '#c69a55'
+    ctx.fillRect(0, 0, 3, h)
+    ctx.fillRect(64, 0, 3, h)
+  }, repeat)
+
+// Copper hexagons that stick out like little pyramids (Opus). One tile = 2 hexagons across.
+export const hexTexture = (repeat) =>
+  makeTexture('hex', 256, 222, (ctx, w, h) => {
+    ctx.fillStyle = '#26221f'
+    ctx.fillRect(0, 0, w, h)
+    const r = h / 3 // corner to middle of one hexagon
+    const cw = w / 2 // width of one hexagon
+    // each of the 6 sloping faces gets its own shade, lit from the top left
+    const shades = ['#e7ab84', '#d39168', '#b97752', '#a5663f', '#bd7b55', '#dc9d75']
+    for (let row = -1; row <= 3; row++) {
+      for (let col = -1; col <= 2; col++) {
+        const cx = col * cw + (((row % 2) + 2) % 2 ? cw / 2 : 0)
+        const cy = row * 1.5 * r
+        const corner = (k) => {
+          const a = (-90 + 60 * k) * (Math.PI / 180)
+          return [cx + Math.cos(a) * (r - 5), cy + Math.sin(a) * (r - 5)]
+        }
+        for (let k = 0; k < 6; k++) {
+          const [ax, ay] = corner(k)
+          const [bx, by] = corner(k + 1)
+          ctx.fillStyle = shades[k]
+          ctx.beginPath()
+          ctx.moveTo(cx, cy)
+          ctx.lineTo(ax, ay)
+          ctx.lineTo(bx, by)
+          ctx.closePath()
+          ctx.fill()
+        }
+      }
+    }
+  }, repeat)
+
+// Glass curtain wall: panels in a grid, each a slightly different shade of sky
+export const glassTexture = (repeat) =>
+  makeTexture('glass', 128, 128, (ctx, w, h) => {
+    const random = rng(21)
+    for (let y = 0; y < h; y += 32) {
+      for (let x = 0; x < w; x += 32) {
+        const v = random()
+        const g = ctx.createLinearGradient(x, y, x + 32, y + 32)
+        g.addColorStop(0, v < 0.2 ? '#3e4b57' : '#7f95a8')
+        g.addColorStop(1, v < 0.2 ? '#56636e' : '#a8bccb')
+        ctx.fillStyle = g
+        ctx.fillRect(x, y, 32, 32)
+      }
+    }
+    ctx.fillStyle = '#2a3138'
+    for (let i = 0; i < w; i += 32) {
+      ctx.fillRect(i, 0, 2, h)
+      ctx.fillRect(0, i, w, 2)
+    }
+  }, repeat)
+
+// Grey horizontal louvers over the parking floors (GBF Center)
+export const greyLouverTexture = (repeat) =>
+  makeTexture('greyLouver', 64, 64, (ctx, w, h) => {
+    ctx.fillStyle = '#3c3f42'
+    ctx.fillRect(0, 0, w, h)
+    for (let y = 0; y < h; y += 6) {
+      ctx.fillStyle = '#676b70'
+      ctx.fillRect(0, y, w, 3)
+    }
+  }, repeat)
+
+// Tower still being built: concrete floor slabs, dark openings, green safety net and a few blue windows.
+// One tile = 4 floors.
+export const constructionTexture = (repeat) =>
+  makeTexture('construction', 256, 128, (ctx, w, h) => {
+    const random = rng(33)
+    ctx.fillStyle = '#9d988f'
+    ctx.fillRect(0, 0, w, h)
+    for (let y = 0; y < h; y += 32) {
+      for (let x = 0; x < w; x += 16) {
+        const v = random()
+        ctx.fillStyle = v < 0.45 ? '#2c2f33' : v < 0.75 ? '#3f8f5c' : v < 0.88 ? '#6fa3cf' : '#bdb7ab'
+        ctx.fillRect(x + 2, y + 8, 12, 22)
+      }
+      ctx.fillStyle = '#c9c4ba'
+      ctx.fillRect(0, y, w, 7)
+    }
+  }, repeat)
+
+// Parking floors under the towers: light grey bands with dark slots
+export const podiumTexture = (repeat) =>
+  makeTexture('podium', 128, 64, (ctx, w, h) => {
+    ctx.fillStyle = '#c4c0b7'
+    ctx.fillRect(0, 0, w, h)
+    ctx.fillStyle = '#4b4f54'
+    for (let x = 4; x < w; x += 32) ctx.fillRect(x, 20, 24, 30)
+  }, repeat)
+
+// Wooden deck boards (riverside walk)
+export const deckTexture = (repeat) =>
+  makeTexture('deck', 64, 64, (ctx, w, h) => {
+    speckle(ctx, w, h, '#6d5a4b', ['#5b4a3d', '#7e6a59'], 300, 41)
+    ctx.fillStyle = '#4a3c31'
+    for (let x = 0; x < w; x += 8) ctx.fillRect(x, 0, 1, h)
+  }, repeat)
+
+// Thin railing bars, see-through between them
+export const railBarsTexture = (repeat, color = '#2f2622') =>
+  makeTexture(`railBars${color}`, 32, 32, (ctx, w, h) => {
+    ctx.fillStyle = color
+    ctx.fillRect(0, 0, 4, h)
+  }, repeat)
+
+// Greenish-brown water of the Pasig River
+export const riverTexture = (repeat) =>
+  makeTexture('river', 256, 256, (ctx, w, h) => {
+    speckle(ctx, w, h, '#4d6258', ['#5e7368', '#41544b', '#6f8578'], 2500, 47)
+  }, repeat)
+
+// Blue-grey corrugated fence around the construction site
+export const hoardingTexture = (repeat) =>
+  makeTexture('hoarding', 32, 32, (ctx, w, h) => {
+    ctx.fillStyle = '#3e4c5e'
+    ctx.fillRect(0, 0, w, h)
+    ctx.fillStyle = '#566579'
+    ctx.fillRect(0, 0, 10, h)
+  }, repeat)

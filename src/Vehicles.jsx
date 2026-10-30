@@ -137,6 +137,32 @@ export function Motorbike({ color = '#1e3a8a' }) {
   )
 }
 
+// Car (sedan), or an SUV when suv is set
+export function Car({ color = '#e8e8e8', suv = false, driver = false }) {
+  const h = suv ? 0.9 : 0.65 // body height
+  const paint = { color, metalness: 0.5, roughness: 0.35 }
+  return (
+    <group>
+      <Box size={[1.8, h, 4.4]} position={[0, 0.3 + h / 2, 0]} {...paint} />
+      <Box size={[1.6, 0.6, suv ? 2.9 : 2.2]} position={[0, 0.6 + h, suv ? -0.35 : -0.2]} color="#26313a" roughness={0.15} metalness={0.3} />
+      <Box size={[1.62, 0.07, suv ? 2.7 : 1.7]} position={[0, 0.93 + h, suv ? -0.4 : -0.25]} {...paint} />
+      {[-0.62, 0.62].map((x) => (
+        <group key={x}>
+          <Box size={[0.32, 0.12, 0.03]} position={[x, 0.2 + h, 2.2]} color="#f4f4f0" emissive="#fff6d8" emissiveIntensity={0.3} />
+          <Box size={[0.32, 0.12, 0.03]} position={[x, 0.2 + h, -2.2]} color="#c0262c" />
+        </group>
+      ))}
+      <Plate text="NFT 4821" position={[0, 0.5, -2.21]} />
+      {[[-0.85, 1.4], [0.85, 1.4], [-0.85, -1.4], [0.85, -1.4]].map(([x, z], i) => (
+        <Wheel key={i} position={[x, 0.33, z]} r={0.33} w={0.22} />
+      ))}
+      {driver && <Driver position={[-0.4, 0.5, 0.1]} />}
+    </group>
+  )
+}
+
+const Suv = (props) => <Car suv {...props} />
+
 // Size of each vehicle's invisible solid box: half sizes + where its center is
 const VEHICLES = {
   tricycle: { Model: Tricycle, half: [0.8, 0.9, 1.15], center: [0.15, 0.9, 0] },
@@ -144,6 +170,8 @@ const VEHICLES = {
   van: { Model: Van, half: [0.93, 1.0, 2.35], center: [0, 1.0, 0] },
   jeep: { Model: Jeep, half: [0.83, 1.0, 1.85], center: [0, 1.0, 0] },
   motorbike: { Model: Motorbike, half: [0.3, 0.55, 0.9], center: [0, 0.55, 0] },
+  car: { Model: Car, half: [0.92, 0.75, 2.2], center: [0, 0.75, 0] },
+  suv: { Model: Suv, half: [0.92, 0.9, 2.2], center: [0, 0.9, 0] },
 }
 
 export function ParkedVehicle({ type, position, rotation = 0, ...props }) {
@@ -157,17 +185,23 @@ export function ParkedVehicle({ type, position, rotation = 0, ...props }) {
 }
 
 // Moving traffic. Vehicles slow down for the player and for the vehicle in front.
-export function Traffic({ cars }) {
+// start / end: where the street begins and ends. court: wait for the pickleball court (Taytay only).
+export function Traffic({ cars, start = STREET_START, end = STREET_END, court = true }) {
   const states = useRef(cars.map((c) => ({ z: c.z, speed: c.speed })))
-  return cars.map((car, i) => <MovingVehicle key={i} index={i} cars={cars} states={states} />)
+  return cars.map((car, i) => (
+    <MovingVehicle key={i} index={i} cars={cars} states={states} start={start} end={end} court={court} />
+  ))
 }
 
-function MovingVehicle({ index, cars, states }) {
+// Where a car drives: car.x if it has one (for roads with more lanes), otherwise its lane
+const laneX = (car) => car.x ?? (car.lane === 'right' ? LANE_X : -LANE_X)
+
+function MovingVehicle({ index, cars, states, start, end, court }) {
   const body = useRef()
   const car = cars[index]
   const { Model, half, center } = VEHICLES[car.type]
-  const dir = car.lane === 'right' ? -1 : 1 // right lane drives toward -z
-  const x = car.lane === 'right' ? LANE_X : -LANE_X
+  const x = laneX(car)
+  const dir = x > 0 ? -1 : 1 // the right side drives toward -z
 
   useFrame((_, delta) => {
     if (!body.current) return
@@ -182,7 +216,7 @@ function MovingVehicle({ index, cars, states }) {
     // Wait outside the pickleball court while a game is going on
     // (also when other players in the room are playing on the court)
     const { mode, pb } = getGame()
-    if (mode === 'pickleball' || mode === 'pickleball2' || (pb && pb.phase !== 'waiting')) {
+    if (court && (mode === 'pickleball' || mode === 'pickleball2' || (pb && pb.phase !== 'waiting'))) {
       // Already on the court when the game starts: move just past it, so it doesn't park on the court
       const clear = COURT.halfLength + 1.5 + half[2]
       if (Math.abs(me.z - COURT.z) < clear) {
@@ -197,7 +231,7 @@ function MovingVehicle({ index, cars, states }) {
 
     // Don't bump into the vehicle in front
     states.current.forEach((other, j) => {
-      if (j === index || cars[j].lane !== car.lane) return
+      if (j === index || laneX(cars[j]) !== x) return
       const gap = (other.z - me.z) * dir
       if (gap > 0 && gap < 8) target = Math.min(target, gap < 5.5 ? 0 : other.speed)
     })
@@ -205,8 +239,8 @@ function MovingVehicle({ index, cars, states }) {
     me.speed = THREE.MathUtils.damp(me.speed, target, 3, dt)
     me.z += dir * me.speed * dt
     // At the end of the street, come back from the other end
-    if (me.z < STREET_START) me.z += STREET_END - STREET_START
-    if (me.z > STREET_END) me.z -= STREET_END - STREET_START
+    if (me.z < start) me.z += end - start
+    if (me.z > end) me.z -= end - start
     body.current.setNextKinematicTranslation({ x, y: 0, z: me.z })
   })
 

@@ -3,6 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { KeyboardControls } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
 import Street from './Street.jsx'
+import Bridgetowne from './Bridgetowne.jsx'
 import Player from './Player.jsx'
 import Npc from './Npc.jsx'
 import Pickleball from './Pickleball.jsx'
@@ -12,6 +13,7 @@ import RemotePlayers from './RemotePlayers.jsx'
 import NightLights from './NightLights.jsx'
 import { SkyAndClouds } from './Props.jsx'
 import { TIMES } from './timeOfDay.js'
+import { MAPS } from './maps.js'
 import { playerPos } from './world.js'
 import { useGame } from './game.js'
 
@@ -53,12 +55,13 @@ function Sun({ time, low }) {
 }
 
 export default function App() {
-  const { mode, time: timeName, touch, quality, pb } = useGame()
+  const { mode, time: timeName, touch, quality, pb, map } = useGame()
   const low = quality === 'low'
   useEffect(() => {
     document.body.classList.toggle('touch', touch)
   }, [touch])
   const time = TIMES[timeName]
+  const taytay = map === 'tnlf' // Edson and pickleball are only in Taytay
   return (
     <>
       <KeyboardControls map={keyMap}>
@@ -70,21 +73,21 @@ export default function App() {
           gl={{ antialias: !low, powerPreference: 'high-performance' }}
           camera={{ fov: 60, near: 0.1, far: 400 }}
         >
-          <fog attach="fog" args={[time.fog, time.fogNear, time.fogFar]} />
+          <fog attach="fog" args={[time.fog, time.fogNear * MAPS[map].fog, time.fogFar * MAPS[map].fog]} />
           <SkyAndClouds time={time} low={low} />
           {/* Smooth mode has no lamp lights, so nights get a bit more soft light instead */}
           <hemisphereLight color={time.hemiSky} groundColor={time.hemiGround}
             intensity={time.hemi * (low && time.lamps ? 1.8 : 1)} />
           <Sun time={time} low={low} />
-          <NightLights brightness={time.lamps} low={low} />
+          <NightLights brightness={time.lamps} low={low} map={map} />
           <Physics gravity={[0, -9.81, 0]}>
-            <Street />
+            {taytay ? <Street /> : <Bridgetowne />}
             <Player />
-            <Npc />
-            {mode === 'pickleball' && <Pickleball />}
-            {mode === 'pickleball2' && <Pickleball2P />}
+            {taytay && <Npc />}
+            {taytay && mode === 'pickleball' && <Pickleball />}
+            {taytay && mode === 'pickleball2' && <Pickleball2P />}
             {/* Watching other players' game */}
-            {mode !== 'pickleball2' && mode !== 'pickleball' && pb && pb.phase !== 'waiting' && <Pickleball2P playing={false} />}
+            {taytay && mode !== 'pickleball2' && mode !== 'pickleball' && pb && pb.phase !== 'waiting' && <Pickleball2P playing={false} />}
           </Physics>
           <RemotePlayers />
         </Canvas>

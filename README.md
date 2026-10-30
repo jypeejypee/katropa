@@ -3,6 +3,12 @@
 Tambay, laro at kwentuhan kasama ang tropa. A 3D street in Taytay you can walk around with friends:
 chat, voice, pickleball with Edson, and your own character. (From the maker of Kasama.)
 
+There are two places to hang out (pick one on the start screen under **Saan tayo?**):
+- **Taytay (TNLF)**: the street at Taytay New Life Fellowship, with Edson and pickleball.
+- **Bridgetowne, Pasig**: the bridge over the Pasig River with the rattan coils, The Victor,
+  Opus and GBF Center, and the round towers being built on the QC side. You start on the QC side of the bridge.
+  Friends have to pick the same place and the same room code to see each other.
+
 A box character walking around a simple 3D street.
 Built with React + React Three Fiber + Rapier (physics).
 
@@ -134,6 +140,10 @@ everyone. Tap **Tapos na** to stop watching.
 | File | What it does |
 |---|---|
 | `src/houses.js` | **The whole street layout: buildings, trees, posts, signs, parked cars, traffic. Edit this!** |
+| `src/maps.js` | The places you can pick (Taytay, Bridgetowne): where you start, how far you can see |
+| `src/bridgetowne.js` | **Bridgetowne layout: road and bridge sizes, palms, trees, street lights, traffic. Edit this!** |
+| `src/Bridgetowne.jsx` | Bridgetowne: the ground, river, bridge, road, sidewalks, railings, and puts everything in place |
+| `src/BridgetowneLandmarks.jsx` | The Victor, the rattan coils, Opus, GBF Center, the QC towers, palms, bollards |
 | `src/dialogue.js` | **Everything Edson says. Edit it to change the conversation!** |
 | `src/timeOfDay.js` | Colors and lights for noon, afternoon and night. Tweak them here! |
 | `src/NightLights.jsx` | Street lights and glowing lights that turn on at night |

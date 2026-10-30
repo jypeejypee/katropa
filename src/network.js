@@ -4,6 +4,7 @@ import { playerPos, playerState } from './world.js'
 import { getGame, setGame } from './game.js'
 import { attachVoice } from './voice.js'
 import { timeFromClock } from './timeOfDay.js'
+import { serverRoom } from './maps.js'
 
 // Where the multiplayer server is. By default it's reached through the game's own address
 // (vite.config.js passes it on to npm run server on port 3001).
@@ -33,14 +34,14 @@ function addPlayer(p) {
   })
 }
 
-export function connect({ name, room, avatar, adminCode }) {
+export function connect({ name, room, map, avatar, adminCode }) {
   if (socket) return
   setGame({ online: 'connecting' })
   socket = io(SERVER_URL, { transports: ['websocket'] })
   attachVoice(socket)
 
   socket.on('connect', () => {
-    socket.emit('join', { name, room, avatar, adminCode })
+    socket.emit('join', { name, room: serverRoom(map, room), avatar, adminCode })
     setGame({ online: 'online' })
   })
   socket.on('connect_error', () => setGame({ online: 'offline' }))

@@ -774,7 +774,14 @@ input {
   font-weight: 600;
 }
 
-.room-label .hint {
+.map-label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: -4px;
+}
+
+.room-label .hint,
+.map-label .hint {
   font-weight: 400;
   opacity: 0.6;
   font-size: 12px;

@@ -5,6 +5,7 @@ import { RigidBody, CapsuleCollider, useRapier } from '@react-three/rapier'
 import * as THREE from 'three'
 import { playerPos, playerState, npcPos, now, lerpAngle, touchInput } from './world.js'
 import { getGame, useGame } from './game.js'
+import { MAPS } from './maps.js'
 import { isTyping } from './network.js'
 import { Person, animatePerson, SIT_DROP } from './Person.jsx'
 import SpeechBubble from './SpeechBubble.jsx'
@@ -255,7 +256,7 @@ export default function Player() {
     <RigidBody
       ref={body}
       colliders={false}
-      position={[-5.0, 1.5, -7]} // left sidewalk, where photo 2 was taken; TNLF and Edson are just ahead
+      position={MAPS[getGame().map].start}
       enabledRotations={[false, false, false]}
     >
       {/* friction 0 so the player slides along walls instead of sticking */}

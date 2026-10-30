@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { RigidBody, CuboidCollider, CylinderCollider } from '@react-three/rapier'
@@ -382,18 +383,23 @@ export function SkyAndClouds({ time, low }) {
       }
     })
   }, [])
+  // The sky, stars and moon move with the camera, so you never reach the edge of the sky
+  const dome = useRef()
+  useFrame(({ camera }) => dome.current.position.copy(camera.position))
   return (
     <>
-      <mesh>
-        <sphereGeometry args={[350, 32, 16]} />
-        <meshBasicMaterial map={skyTexture(time.sky)} side={THREE.BackSide} fog={false} depthWrite={false} />
-      </mesh>
-      <points geometry={stars} visible={time.stars}>
-        <pointsMaterial color="#ffffff" size={1.6} sizeAttenuation={false} fog={false} depthWrite={false} />
-      </points>
-      <sprite position={[-120, 150, -220]} scale={[34, 34, 1]} visible={time.stars}>
-        <spriteMaterial map={moonTexture()} transparent fog={false} depthWrite={false} />
-      </sprite>
+      <group ref={dome}>
+        <mesh>
+          <sphereGeometry args={[350, 32, 16]} />
+          <meshBasicMaterial map={skyTexture(time.sky)} side={THREE.BackSide} fog={false} depthWrite={false} />
+        </mesh>
+        <points geometry={stars} visible={time.stars}>
+          <pointsMaterial color="#ffffff" size={1.6} sizeAttenuation={false} fog={false} depthWrite={false} />
+        </points>
+        <sprite position={[-120, 150, -220]} scale={[34, 34, 1]} visible={time.stars}>
+          <spriteMaterial map={moonTexture()} transparent fog={false} depthWrite={false} />
+        </sprite>
+      </group>
       {(low ? clouds.slice(0, 10) : clouds).map((c, i) => (
         <sprite key={i} position={c.position} scale={c.scale}>
           <spriteMaterial map={cloudTexture(c.seed)} color={time.cloudColor} opacity={time.cloudOpacity}
