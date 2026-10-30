@@ -81,58 +81,6 @@ export function Tricycle({ color = '#2e7d32', plate = '037', driver = false }) {
   )
 }
 
-// Delivery truck like the green one in the photo
-export function Truck({ color = '#2e9e48' }) {
-  return (
-    <group>
-      <Box size={[1.6, 0.3, 5.4]} position={[0, 0.6, 0]} color="#222" />
-      <Box size={[2.0, 1.6, 1.5]} position={[0, 1.5, 1.9]} color={color} />
-      <Box size={[1.8, 0.7, 0.02]} position={[0, 1.85, 2.66]} color="#22303a" roughness={0.2} />
-      <Box size={[2.0, 0.25, 0.15]} position={[0, 0.65, 2.68]} color="#999" />
-      <Box size={[2.2, 2.3, 4.0]} position={[0, 1.95, -0.9]} color={color} />
-      <Wheel position={[-0.95, 0.42, 1.8]} r={0.42} w={0.3} />
-      <Wheel position={[0.95, 0.42, 1.8]} r={0.42} w={0.3} />
-      <Wheel position={[-0.95, 0.42, -1.6]} r={0.42} w={0.3} />
-      <Wheel position={[0.95, 0.42, -1.6]} r={0.42} w={0.3} />
-      <Driver position={[-0.45, 0.95, 1.9]} />
-    </group>
-  )
-}
-
-// Silver family van
-export function Van({ color = '#c9cdd2' }) {
-  return (
-    <group>
-      <Box size={[1.85, 0.85, 4.7]} position={[0, 0.75, 0]} color={color} metalness={0.6} roughness={0.35} />
-      <Box size={[1.72, 0.7, 3.3]} position={[0, 1.52, -0.35]} color="#26313a" roughness={0.15} metalness={0.3} />
-      <Box size={[1.76, 0.08, 3.2]} position={[0, 1.9, -0.4]} color={color} metalness={0.6} roughness={0.35} />
-      <Box size={[1.2, 0.3, 0.02]} position={[0, 0.85, 2.36]} color="#222" />
-      <Plate text="NAY 502" position={[0, 0.55, 2.36]} rotation={[0, 0, 0]} />
-      <Wheel position={[-0.85, 0.34, 1.5]} r={0.34} w={0.22} />
-      <Wheel position={[0.85, 0.34, 1.5]} r={0.34} w={0.22} />
-      <Wheel position={[-0.85, 0.34, -1.5]} r={0.34} w={0.22} />
-      <Wheel position={[0.85, 0.34, -1.5]} r={0.34} w={0.22} />
-    </group>
-  )
-}
-
-// Old owner-type jeep
-export function Jeep({ color = '#4f6b3a' }) {
-  return (
-    <group>
-      <Box size={[1.65, 0.8, 3.6]} position={[0, 0.85, 0]} color={color} />
-      <Box size={[1.5, 0.25, 1.1]} position={[0, 1.35, 1.1]} color={color} />
-      <Box size={[1.55, 0.55, 0.05]} position={[0, 1.7, 0.5]} color="#2a3540" transparent opacity={0.6} />
-      <Box size={[1.6, 0.06, 0.06]} position={[0, 1.95, -1.0]} color="#333" />
-      <Box size={[1.3, 0.35, 0.05]} position={[0, 0.9, 1.81]} color="#ddd" metalness={0.8} roughness={0.3} />
-      <Wheel position={[-0.8, 0.35, 1.1]} r={0.35} w={0.22} />
-      <Wheel position={[0.8, 0.35, 1.1]} r={0.35} w={0.22} />
-      <Wheel position={[-0.8, 0.35, -1.1]} r={0.35} w={0.22} />
-      <Wheel position={[0.8, 0.35, -1.1]} r={0.35} w={0.22} />
-    </group>
-  )
-}
-
 // A side outline (z, y points) pushed out sideways into a solid piece, centered on x = 0.
 // The rounded edge makes it `bevel` bigger all around the outline.
 function sideShape(points, width, bevel = 0.05) {
@@ -230,25 +178,53 @@ function Rider() {
   )
 }
 
-// Car (sedan), or an SUV when suv is set.
-// Smooth side outlines (curves, no corners) pushed out sideways with well-rounded edges, so the
-// body has almost no hard edges: rounded nose and tail, curved hood and roof, real wheel arches.
-// The cabin is a separate rounded piece of tinted glass sitting on the body.
-// (Numbers are before rounding: the rounded edge adds `edge` all around the outline.)
+// Cars, SUVs, vans, jeeps and trucks, all built the same smooth way:
+// side outlines (curves, no corners) pushed out sideways with well-rounded edges, so there are
+// almost no hard edges: rounded nose and tail, curved hood and roof, real wheel arches.
+// The cabin is a separate rounded piece of tinted glass; some have a painted roof over it, the truck a cargo box.
+// (Numbers are before rounding: the rounded edge adds 0.08 all around the outline.)
 const CAR_SPECS = {
   sedan: {
-    width: 1.8, bottom: 0.36, wheelY: 0.31, wheelZ: 1.4, arch: 0.48,
+    width: 1.8, bottom: 0.36, wheelY: 0.31, wheels: [1.4, -1.4], arch: 0.48, wheelX: 0.76,
     body: [[2.15, 0.36], [2.21, 0.55], [2.12, 0.74], [1.6, 0.84], [0.9, 0.88], [-1.4, 0.9], [-2.0, 0.86], [-2.18, 0.7], [-2.15, 0.36]],
     cabin: [[0.85, 0.85], [0.45, 1.15], [0.1, 1.33], [-0.4, 1.37], [-0.85, 1.3], [-1.2, 1.08], [-1.48, 0.85]],
     cabinWidth: 1.5,
-    head: [0.68, 2.24], tail: [0.76, -2.23], belt: 0.92, mirrorZ: 0.75,
+    head: [0.68, 2.24], tail: [0.76, -2.23], belt: 0.92, mirrorZ: 0.75, front: 2.33, back: -2.31,
   },
   suv: {
-    width: 1.84, bottom: 0.42, wheelY: 0.36, wheelZ: 1.4, arch: 0.52,
+    width: 1.84, bottom: 0.42, wheelY: 0.36, wheels: [1.4, -1.4], arch: 0.52, wheelX: 0.76,
     body: [[2.15, 0.42], [2.21, 0.7], [2.12, 0.98], [1.5, 1.1], [0.95, 1.14], [-2.0, 1.15], [-2.19, 1.04], [-2.15, 0.42]],
     cabin: [[1.0, 1.1], [0.6, 1.42], [0.25, 1.66], [-0.5, 1.71], [-1.7, 1.71], [-2.12, 1.6], [-2.19, 1.1]],
     cabinWidth: 1.56,
-    head: [0.9, 2.25], tail: [0.86, -2.25], belt: 1.17, mirrorZ: 0.9,
+    head: [0.9, 2.25], tail: [0.86, -2.25], belt: 1.17, mirrorZ: 0.9, front: 2.33, back: -2.31,
+  },
+  // family van (one long rounded box with a painted roof over the windows)
+  van: {
+    width: 1.84, bottom: 0.4, wheelY: 0.34, wheels: [1.5, -1.5], arch: 0.5, wheelX: 0.78,
+    body: [[2.25, 0.4], [2.3, 0.7], [2.2, 0.98], [1.8, 1.1], [1.5, 1.14], [-2.2, 1.18], [-2.3, 0.95], [-2.25, 0.4]],
+    cabin: [[1.55, 1.1], [1.05, 1.55], [0.55, 1.8], [-1.95, 1.84], [-2.24, 1.7], [-2.29, 1.14]],
+    cabinWidth: 1.66,
+    roof: [[0.75, 1.74], [0.45, 1.86], [-1.0, 1.9], [-2.0, 1.88], [-2.24, 1.74]], roofWidth: 1.72,
+    head: [0.88, 2.35], tail: [0.95, -2.36], belt: 1.16, mirrorZ: 1.45, front: 2.42, back: -2.42,
+  },
+  // owner-type jeep: short and tall, chrome grille, painted top
+  jeep: {
+    width: 1.66, bottom: 0.42, wheelY: 0.35, wheels: [1.12, -1.12], arch: 0.5, wheelX: 0.69, chrome: true,
+    body: [[1.72, 0.42], [1.8, 0.75], [1.7, 1.05], [1.0, 1.16], [0.55, 1.18], [-1.7, 1.2], [-1.8, 1.0], [-1.76, 0.42]],
+    cabin: [[0.6, 1.15], [0.3, 1.66], [-1.5, 1.7], [-1.72, 1.16]],
+    cabinWidth: 1.5,
+    roof: [[0.38, 1.62], [0.3, 1.74], [-1.55, 1.78], [-1.72, 1.64]], roofWidth: 1.56,
+    head: [0.9, 1.84], tail: [0.95, -1.85], belt: 1.17, mirrorZ: 0.5, front: 1.9, back: -1.9,
+  },
+  // delivery truck: rounded cab in front, tall rounded cargo box behind
+  truck: {
+    width: 2.0, bottom: 0.5, wheelY: 0.42, wheels: [1.8, -1.6], arch: 0.58, wheelX: 0.9, wheelW: 0.3,
+    body: [[2.68, 0.5], [2.74, 0.9], [2.64, 1.3], [2.3, 1.42], [1.15, 1.44], [1.0, 1.15], [0.8, 1.0], [-2.62, 1.0], [-2.7, 0.8], [-2.68, 0.5]],
+    cabin: [[2.5, 1.38], [2.3, 2.05], [2.0, 2.24], [1.15, 2.27], [1.1, 1.38]],
+    cabinWidth: 1.9,
+    roof: [[2.2, 2.18], [2.0, 2.34], [1.15, 2.38], [1.12, 2.2]], roofWidth: 1.96,
+    cargo: [[0.95, 1.0], [0.95, 3.0], [-2.75, 3.0], [-2.75, 1.0]], cargoWidth: 2.2,
+    head: [0.95, 2.78], tail: [1.15, -2.84], belt: 1.42, mirrorZ: 2.3, front: 2.84, back: -2.85,
   },
 }
 
@@ -267,30 +243,38 @@ function roundedSlab(shape, width, edge, side) {
   return g
 }
 
+// A closed smooth outline through [z, y] points
+function smoothOutline(points, straight = false) {
+  const v = (p) => new THREE.Vector2(...p)
+  const shape = new THREE.Shape()
+  shape.moveTo(...points[0])
+  if (straight) points.slice(1).forEach((p) => shape.lineTo(...p))
+  else shape.splineThru(points.slice(1).map(v))
+  shape.closePath()
+  return shape
+}
+
 const carParts = {}
 function carShapes(kind) {
   if (carParts[kind]) return carParts[kind]
   const s = CAR_SPECS[kind]
   const v = (p) => new THREE.Vector2(...p)
-  // Body: flat bottom with an arch over each wheel, smooth curve over the top
+  // Body: flat bottom with an arch over each wheel (nose to tail), then a smooth curve over the top
   const body = new THREE.Shape()
   const [start, ...rest] = s.body
   body.moveTo(...start)
   const lift = Math.asin((s.bottom - s.wheelY) / s.arch)
-  for (const wz of [-s.wheelZ, s.wheelZ].reverse()) {
+  for (const wz of s.wheels) {
     body.lineTo(wz + Math.cos(lift) * s.arch, s.bottom)
     body.absarc(wz, s.wheelY, s.arch, lift, Math.PI - lift, false)
   }
   body.lineTo(...s.body[s.body.length - 1])
-  // the arches above were drawn from the nose back to the tail; now the top, from the tail to the nose
   body.splineThru([...rest].reverse().map(v).slice(1).concat([v(start)]))
-  const cabin = new THREE.Shape()
-  cabin.moveTo(...s.cabin[0])
-  cabin.splineThru(s.cabin.slice(1).map(v))
-  cabin.closePath()
   carParts[kind] = {
     body: roundedSlab(body, s.width, 0.08, 0.2),
-    cabin: roundedSlab(cabin, s.cabinWidth, 0.04, 0.16),
+    cabin: roundedSlab(smoothOutline(s.cabin), s.cabinWidth, 0.04, 0.16),
+    roof: s.roof && roundedSlab(smoothOutline(s.roof), s.roofWidth, 0.03, 0.12),
+    cargo: s.cargo && roundedSlab(smoothOutline(s.cargo, true), s.cargoWidth, 0.1, 0.18),
   }
   return carParts[kind]
 }
@@ -306,36 +290,43 @@ function Lamp({ position, scale, color, glow }) {
   )
 }
 
-export function Car({ color = '#e8e8e8', suv = false }) {
-  const s = CAR_SPECS[suv ? 'suv' : 'sedan']
-  const { body, cabin } = carShapes(suv ? 'suv' : 'sedan')
+export function Car({ kind = 'sedan', color = '#e8e8e8', plate = 'NFT 4821' }) {
+  const s = CAR_SPECS[kind]
+  const { body, cabin, roof, cargo } = carShapes(kind)
   const paint = useMemo(() => new THREE.MeshStandardMaterial({ color, metalness: 0.2, roughness: 0.3 }), [color])
+  const lampX = s.width * 0.31
   return (
     <group>
       <mesh castShadow receiveShadow geometry={body} material={paint} />
       <mesh castShadow geometry={cabin} material={glassMaterial} />
+      {roof && <mesh castShadow geometry={roof} material={paint} />}
+      {cargo && <mesh castShadow receiveShadow geometry={cargo} material={paint} />}
       {[-1, 1].map((sd) => (
         <group key={sd}>
           {/* headlights, tail lights, side mirrors */}
-          <Lamp position={[sd * 0.56, s.head[0], s.head[1]]} scale={[0.22, 0.065, 0.06]} color="#f6f6f2" glow="#fff3cf" />
-          <Lamp position={[sd * 0.58, s.tail[0], s.tail[1]]} scale={[0.24, 0.055, 0.06]} color="#b3121a" glow="#ff1c1c" />
-          <mesh geometry={lampGeometry} material={paint} position={[sd * 0.9, s.belt + 0.06, s.mirrorZ]} scale={[0.1, 0.06, 0.08]} />
+          <Lamp position={[sd * lampX, s.head[0], s.head[1]]} scale={[0.22, 0.065, 0.06]} color="#f6f6f2" glow="#fff3cf" />
+          <Lamp position={[sd * lampX, s.tail[0], s.tail[1]]} scale={[0.24, 0.055, 0.06]} color="#b3121a" glow="#ff1c1c" />
+          <mesh geometry={lampGeometry} material={paint} position={[sd * (s.width / 2), s.belt + 0.06, s.mirrorZ]} scale={[0.1, 0.06, 0.08]} />
         </group>
       ))}
-      {/* dark grille under the hood, plates */}
-      <mesh geometry={lampGeometry} position={[0, s.head[0] - 0.16, s.head[1] + 0.02]} scale={[0.42, 0.06, 0.05]}>
-        <meshStandardMaterial color="#121212" roughness={0.5} />
+      {/* grille under the hood (chrome on the jeep), plates */}
+      <mesh geometry={lampGeometry} position={[0, s.head[0] - 0.16, s.head[1] + 0.02]} scale={[s.chrome ? 0.5 : 0.42, s.chrome ? 0.1 : 0.06, 0.05]}>
+        <meshStandardMaterial color={s.chrome ? '#d9dde0' : '#121212'} metalness={s.chrome ? 0.9 : 0} roughness={s.chrome ? 0.2 : 0.5} />
       </mesh>
-      <Plate text="NFT 4821" position={[0, s.bottom + 0.12, -2.31]} />
-      <Plate text="NFT 4821" position={[0, s.bottom + 0.06, 2.33]} rotation={[0, 0, 0]} />
-      {[[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([x, z], i) => (
-        <Wheel key={i} position={[x * 0.76, s.wheelY, z * s.wheelZ]} r={s.wheelY} w={0.24} />
-      ))}
+      <Plate text={plate} position={[0, s.bottom + 0.12, s.back]} />
+      <Plate text={plate} position={[0, s.bottom + 0.06, s.front]} rotation={[0, 0, 0]} />
+      {s.wheels.map((z) => [-1, 1].map((x) => (
+        <Wheel key={`${z}${x}`} position={[x * s.wheelX, s.wheelY, z]} r={s.wheelY} w={s.wheelW ?? 0.24} />
+      )))}
     </group>
   )
 }
 
-const Suv = (props) => <Car suv {...props} />
+const Suv = (props) => <Car kind="suv" {...props} />
+export const Van = ({ color = '#c9cdd2', plate = 'NAY 502' }) => <Car kind="van" color={color} plate={plate} />
+export const Jeep = ({ color = '#4f6b3a', plate = 'JEP 117' }) => <Car kind="jeep" color={color} plate={plate} />
+export const Truck = ({ color = '#2e9e48', plate = 'TRK 908' }) => <Car kind="truck" color={color} plate={plate} />
+
 
 // Size of each vehicle's invisible solid box: half sizes + where its center is
 const VEHICLES = {
