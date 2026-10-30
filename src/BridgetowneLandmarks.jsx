@@ -474,10 +474,13 @@ export function DoubleLamp({ z }) {
   )
 }
 
-// Stainless steel post with a yellow band (between the bike lane and the cars)
+// Stainless steel post with a yellow band (between the bike lane and the cars). Solid, so you bump into it.
 export function Bollard({ x, z }) {
   return (
     <group position={[x, 0, z]}>
+      <RigidBody type="fixed" colliders={false} position={[0, 0.45, 0]}>
+        <CylinderCollider args={[0.45, 0.1]} />
+      </RigidBody>
       <mesh castShadow position={[0, 0.45, 0]}>
         <cylinderGeometry args={[0.1, 0.1, 0.9, 10]} />
         <meshStandardMaterial color="#c9cdd1" metalness={0.6} roughness={0.3} />
