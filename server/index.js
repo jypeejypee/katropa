@@ -65,6 +65,7 @@ io.on('connection', (socket) => {
     const others = [...players.values()].filter((p) => p.room === player.room && p.id !== socket.id)
     socket.emit('welcome', { id: socket.id, players: others, name: player.name, admin: !!player.admin })
     socket.emit('settings', settingsOf(player.room))
+    pickleball.greet(socket)
     socket.to(player.room).emit('playerJoined', player)
     console.log(`${player.name} joined room "${player.room}" (${others.length + 1} here)`)
   })

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGame, getGame, setGame } from './game.js'
 import { dialogue, NPC_NAME } from './dialogue.js'
-import { playerState, touchInput } from './world.js'
+import { playerState, touchInput, COURT } from './world.js'
 import { TIMES, TIME_ORDER, timeFromClock } from './timeOfDay.js'
 import { isTyping, sendChat, sendPb, adminSet, isOnline, toast } from './network.js'
 import CharacterCreator from './CharacterCreator.jsx'
@@ -16,8 +16,10 @@ function choose(choice) {
       toast('Kailangan naka-online para makipaglaro sa tropa.')
       return
     }
-    sendPb('pb-join')
-    setGame({ mode: 'pickleball2', dialogue: null })
+    // Two people are already playing: watch them instead
+    const pb = getGame().pb
+    if (pb && pb.phase !== 'waiting') startWatching()
+    else joinMatch()
   }
   else if (choice.action === 'close') setGame({ mode: 'walk', dialogue: null })
   else setGame({ dialogue: choice.next })
@@ -102,7 +104,8 @@ export default function Hud() {
 
       {game.mode !== 'start' && game.admin && <AdminPanel game={game} />}
       {game.toast && <Toast toast={game.toast} />}
-      {game.pb && game.mode !== 'pickleball2' && game.mode !== 'start' && <CourtBanner pb={game.pb} />}
+      {game.pb && game.mode !== 'pickleball2' && game.mode !== 'start' &&
+        (game.watching && game.pb.phase !== 'waiting' ? <WatchHud game={game} /> : <CourtBanner pb={game.pb} />)}
 
       {game.mode !== 'talk' && game.mode !== 'start' && (
         <div className="action-buttons">
@@ -329,8 +332,21 @@ function choiceLabel(choice, game) {
   if (choice.action !== 'play2') return choice.label
   const pb = game.pb
   if (pb?.phase === 'waiting' && pb.players[0]?.id !== game.myId) return `Sali sa laro ni ${pb.players[0].name}! 🏓`
-  if (pb && pb.phase !== 'waiting') return `${choice.label} (may naglalaro pa)`
+  if (pb && pb.phase !== 'waiting') return `Manood ng laro nina ${pb.players[0]?.name} at ${pb.players[1]?.name} 👀`
   return choice.label
+}
+
+function joinMatch() {
+  sendPb('pb-join')
+  setGame({ mode: 'pickleball2', dialogue: null, watching: false })
+}
+
+// Stand at the edge of the road behind the near end of the court (clear of the lanes), looking at the game
+const WATCH_SPOT = [-3.4, 1.2, COURT.z + 11, Math.atan2(-3.4, 11)]
+
+function startWatching() {
+  playerState.teleport = WATCH_SPOT
+  setGame({ mode: 'walk', dialogue: null, watching: true })
 }
 
 function leaveMatch() {
@@ -366,13 +382,44 @@ function MatchHud({ game }) {
   )
 }
 
-// For everyone else in the room: who is playing, or who is waiting for a kalaro
+// For everyone else in the room: who is playing (tap to watch), or who is waiting for a kalaro (tap to join)
 function CourtBanner({ pb }) {
   const [a, b] = pb.players
-  const text = pb.phase === 'waiting'
-    ? `🏓 Naghihintay ng kalaro si ${a?.name}! Kausapin si ${NPC_NAME} para sumali.`
+  const waiting = pb.phase === 'waiting'
+  const text = waiting
+    ? `🏓 Naghihintay ng kalaro si ${a?.name}!`
     : `🏓 ${a?.name} ${pb.score[0]} – ${pb.score[1]} ${b?.name}`
-  return <div className="court-banner">{text}</div>
+  const keep = (e) => e.preventDefault()
+  return (
+    <div className="court-banner">
+      <span>{text}</span>
+      {waiting
+        ? <button tabIndex={-1} onMouseDown={keep} onClick={joinMatch}>🏓 Sali</button>
+        : <button tabIndex={-1} onMouseDown={keep} onClick={startWatching}>👀 Manood</button>}
+    </div>
+  )
+}
+
+// While watching: the score with both names, and the latest call ("Di naabot ni ...!")
+function WatchHud({ game }) {
+  const pb = game.pb
+  const [a, b] = pb.players
+  return (
+    <>
+      <div className="scoreboard watch-scoreboard">
+        <span>{a?.name}</span>
+        <b>{pb.score[0]}</b>
+        <span className="dash">–</span>
+        <b>{pb.score[1]}</b>
+        <span>{b?.name}</span>
+      </div>
+      {pb.message && <div className="game-message">{pb.message}</div>}
+      <button className="stop-watching" tabIndex={-1} onMouseDown={(e) => e.preventDefault()}
+        onClick={() => setGame({ watching: false })}>
+        👀 Nanonood · Tapos na
+      </button>
+    </>
+  )
 }
 
 // Short message at the top for a few seconds

@@ -122,7 +122,12 @@ The browser will warn "Your connection is not private": click **Advanced → Pro
 
 Talk to Edson and pick **"Laro tayo, 2 players"**. You wait on the court until a friend in the same room
 talks to Edson and picks **"Sali sa laro ni ..."**. Then you play each other (first to 11, win by 2).
-Everyone else in the room sees the score and can watch. **Q** or **Stop** to quit.
+You can also tap **🏓 Sali** on the banner at the top to join the waiting player. **Q** or **Stop** to quit.
+
+**Watching (spectators):** when two people are playing, everyone else in the room (also people who enter
+the room in the middle of a game) sees a banner with the score. Tap **👀 Manood** (or talk to Edson) to
+stand behind the court and watch, with the scoreboard and the calls. Players' paddles and swings show for
+everyone. Tap **Tapos na** to stop watching.
 
 ## The files (what each one does)
 

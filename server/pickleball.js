@@ -147,6 +147,12 @@ export function setupPickleball(io, players) {
   setInterval(tick, TICK * 1000)
 
   return {
+    // Someone just entered the room: show them the game that's going on (so they can watch or join)
+    greet(socket) {
+      const player = players.get(socket.id)
+      const m = player && matches.get(player.room)
+      if (m) socket.emit('pb-state', publicState(m))
+    },
     // A player wants to play: open a new game, or join the one that's waiting
     join(socket) {
       const player = players.get(socket.id)
@@ -164,7 +170,7 @@ export function setupPickleball(io, players) {
         startServe(m, 0)
         send(m)
       } else if (!m.players.includes(socket.id)) {
-        socket.emit('notice', `May naglalaro na: ${m.players.map((id) => players.get(id)?.name).join(' vs ')}. Hintayin matapos.`)
+        socket.emit('notice', `May naglalaro na: ${m.players.map((id) => players.get(id)?.name).join(' vs ')}. Manood ka muna!`)
       }
     },
     swing(socket, s = {}) {
@@ -173,6 +179,8 @@ export function setupPickleball(io, players) {
       if (!m) return
       const side = m.players.indexOf(socket.id)
       if (side < 0 || m.phase === 'waiting') return
+      // Everyone else in the room sees the paddle swing (the opponent and people watching)
+      if (!s.dive) socket.to(m.room).emit('pb-swung', socket.id)
       // Use the position sent with the swing (more up to date), if it's close to what the server knows
       let px = clean(s.x, 1000)
       let pz = clean(s.z, 1000)

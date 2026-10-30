@@ -23,6 +23,7 @@ let state = {
   admin: false, // true for jaypee with the right admin code (checked by the server)
   myId: null,
   pb: null, // 2-player pickleball game in this room (from the server)
+  watching: false, // watching someone else's game from beside the court
   toast: null, // { text, at } short message at the top of the screen
   playerName: '',
   avatar: DEFAULT_AVATAR, // your character's look (see avatar.js)

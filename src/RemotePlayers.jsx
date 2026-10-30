@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGame } from './game.js'
-import { remotePlayers } from './network.js'
+import { remotePlayers, pbNet } from './network.js'
 import { Person, animatePerson, SIT_DROP } from './Person.jsx'
 import { lerpAngle, playerPos } from './world.js'
 import { setPeerVolume } from './voice.js'
@@ -14,6 +14,7 @@ const target = new THREE.Vector3()
 // Proximity voice: full volume up close, silent when far away (in meters)
 const VOICE_FULL = 4
 const VOICE_RANGE = 30
+const SWING_TIME = 0.35
 
 // The other players in your room, walking around the street
 export default function RemotePlayers() {
@@ -29,6 +30,7 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
   const model = useRef()
   const tilt = useRef()
   const limbs = useRef({ legs: [], arms: [] })
+  const paddle = useRef()
 
   useFrame((state, delta) => {
     const p = remotePlayers.get(id)
@@ -48,7 +50,12 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
     const own = avatar?.model && avatar.model !== 'custom'
     tilt.current.rotation.x = own ? 0 : t.dive * 1.45
     tilt.current.position.y = (own ? 0 : -t.dive * 0.62) - SIT_DROP * t.sit
-    animatePerson(limbs, state.clock.elapsedTime, t.moving, 3, -1, t.sit, avatar?.gender === 'female')
+    // Holding a paddle and swinging it while playing pickleball
+    const playing = !!pbNet.state?.players.some((pl) => pl.id === id)
+    if (paddle.current) paddle.current.visible = playing
+    const since = (performance.now() - (pbNet.swings.get(id) ?? -1e9)) / 1000
+    const swing = playing && since < SWING_TIME ? since / SWING_TIME : -1
+    animatePerson(limbs, state.clock.elapsedTime, t.moving, playing ? 5 : 3, swing, t.sit, avatar?.gender === 'female')
     limbs.current.motion.dive = t.dive > 0.05
   })
 
@@ -56,7 +63,7 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
     <group ref={group}>
       <group ref={model}>
         <group ref={tilt}>
-          <Person limbs={limbs} avatar={avatar} />
+          <Person limbs={limbs} avatar={avatar} paddleRef={paddle} />
         </group>
       </group>
       <SpeechBubble bubble={bubble} />

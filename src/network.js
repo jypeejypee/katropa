@@ -91,9 +91,11 @@ export function connect({ name, room, avatar, adminCode }) {
   socket.on('pb-end', ({ text, players }) => {
     pbNet.state = null
     const { mode } = getGame()
-    setGame({ pb: null, ...(mode === 'pickleball2' ? { mode: 'walk' } : {}) })
-    if (players.includes(myId) || mode === 'pickleball2') toast(text)
+    const { watching } = getGame()
+    setGame({ pb: null, watching: false, ...(mode === 'pickleball2' ? { mode: 'walk' } : {}) })
+    if (players.includes(myId) || mode === 'pickleball2' || watching) toast(text)
   })
+  socket.on('pb-swung', (id) => pbNet.swings.set(id, performance.now()))
 
   socket.on('playerLeft', (id) => {
     remotePlayers.delete(id)
@@ -116,7 +118,8 @@ export function connect({ name, room, avatar, adminCode }) {
 }
 
 // The latest 2-player pickleball state from the server (read every frame by Pickleball2P.jsx)
-export const pbNet = { state: null, at: 0 }
+// swings: player id -> when they last swung their paddle (to animate other players)
+export const pbNet = { state: null, at: 0, swings: new Map() }
 
 export function sendPb(event, data) {
   if (socket?.connected) socket.emit(event, data)
