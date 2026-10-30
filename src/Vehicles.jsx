@@ -1,7 +1,8 @@
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import * as THREE from 'three'
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js'
 import { LANE_X, STREET_START, STREET_END, COURT, playerPos } from './world.js'
 import { getGame } from './game.js'
 import { signTexture } from './textures.js'
@@ -229,69 +230,107 @@ function Rider() {
   )
 }
 
-// Car (sedan), or an SUV when suv is set. Rounded body with wheel arches, glass cabin, lights.
-const carParts = {}
-function carShapes(suv) {
-  if (carParts[suv]) return carParts[suv]
-  const wy = suv ? 0.36 : 0.33 // wheel middle height
-  const ar = suv ? 0.45 : 0.42 // wheel arch size
-  const low = suv ? 0.38 : 0.3 // bottom of the body
-  const top = suv ? 1.2 : 0.95 // where the windows start
-  // the bottom edge goes up and around each wheel
-  const arch = (z) => Array.from({ length: 9 }, (_, i) => {
-    const a = Math.PI - (i / 8) * Math.PI
-    return [z + Math.cos(a) * ar, Math.max(low, wy + Math.sin(a) * ar)]
-  })
-  const body = sideShape([
-    [-2.2, low + 0.02], ...arch(-1.4), ...arch(1.4), [2.2, low + 0.02],
-    [2.24, low + 0.36], [2.16, top - 0.15], [suv ? 1.25 : 1.05, top - 0.02], [suv ? 0.95 : 0.85, top],
-    ...(suv ? [[-2.15, top], [-2.24, top - 0.2]] : [[-1.35, top], [-2.12, top - 0.04], [-2.24, top - 0.25]]),
-  ], 1.8, 0.08)
-  const cabin = sideShape(suv
-    ? [[0.95, top - 0.02], [0.3, top + 0.55], [-2.02, top + 0.55], [-2.16, top - 0.02]]
-    : [[0.88, top - 0.02], [0.2, top + 0.47], [-0.85, top + 0.47], [-1.38, top - 0.02]], 1.56, 0.04)
-  carParts[suv] = { body, cabin, wy, top }
-  return carParts[suv]
+// Car (sedan), or an SUV when suv is set.
+// Smooth side outlines (curves, no corners) pushed out sideways with well-rounded edges, so the
+// body has almost no hard edges: rounded nose and tail, curved hood and roof, real wheel arches.
+// The cabin is a separate rounded piece of tinted glass sitting on the body.
+// (Numbers are before rounding: the rounded edge adds `edge` all around the outline.)
+const CAR_SPECS = {
+  sedan: {
+    width: 1.8, bottom: 0.36, wheelY: 0.31, wheelZ: 1.4, arch: 0.48,
+    body: [[2.15, 0.36], [2.21, 0.55], [2.12, 0.74], [1.6, 0.84], [0.9, 0.88], [-1.4, 0.9], [-2.0, 0.86], [-2.18, 0.7], [-2.15, 0.36]],
+    cabin: [[0.85, 0.85], [0.45, 1.15], [0.1, 1.33], [-0.4, 1.37], [-0.85, 1.3], [-1.2, 1.08], [-1.48, 0.85]],
+    cabinWidth: 1.5,
+    head: [0.68, 2.24], tail: [0.76, -2.23], belt: 0.92, mirrorZ: 0.75,
+  },
+  suv: {
+    width: 1.84, bottom: 0.42, wheelY: 0.36, wheelZ: 1.4, arch: 0.52,
+    body: [[2.15, 0.42], [2.21, 0.7], [2.12, 0.98], [1.5, 1.1], [0.95, 1.14], [-2.0, 1.15], [-2.19, 1.04], [-2.15, 0.42]],
+    cabin: [[1.0, 1.1], [0.6, 1.42], [0.25, 1.66], [-0.5, 1.71], [-1.7, 1.71], [-2.12, 1.6], [-2.19, 1.1]],
+    cabinWidth: 1.56,
+    head: [0.9, 2.25], tail: [0.86, -2.25], belt: 1.17, mirrorZ: 0.9,
+  },
 }
 
-export function Car({ color = '#e8e8e8', suv = false, driver = false }) {
-  const { body, cabin, wy, top } = carShapes(suv)
-  const paint = { color, metalness: 0.5, roughness: 0.32 }
-  const roofTop = top + (suv ? 0.55 : 0.47)
-  const light = top - 0.24 // headlights and tail lights
+// Push a flat outline out sideways (centered on x = 0) with rounded edges and smooth shading
+function roundedSlab(shape, width, edge, side) {
+  const depth = width - side * 2
+  let g = new THREE.ExtrudeGeometry(shape, {
+    depth, bevelEnabled: true, bevelSize: edge, bevelThickness: side, bevelSegments: 6, curveSegments: 40,
+  })
+  g.deleteAttribute('uv')
+  g.deleteAttribute('normal')
+  g = mergeVertices(g, 1e-4)
+  g.rotateY(-Math.PI / 2) // outline x becomes z, the push goes along x
+  g.translate(depth / 2, 0, 0)
+  g.computeVertexNormals()
+  return g
+}
+
+const carParts = {}
+function carShapes(kind) {
+  if (carParts[kind]) return carParts[kind]
+  const s = CAR_SPECS[kind]
+  const v = (p) => new THREE.Vector2(...p)
+  // Body: flat bottom with an arch over each wheel, smooth curve over the top
+  const body = new THREE.Shape()
+  const [start, ...rest] = s.body
+  body.moveTo(...start)
+  const lift = Math.asin((s.bottom - s.wheelY) / s.arch)
+  for (const wz of [-s.wheelZ, s.wheelZ].reverse()) {
+    body.lineTo(wz + Math.cos(lift) * s.arch, s.bottom)
+    body.absarc(wz, s.wheelY, s.arch, lift, Math.PI - lift, false)
+  }
+  body.lineTo(...s.body[s.body.length - 1])
+  // the arches above were drawn from the nose back to the tail; now the top, from the tail to the nose
+  body.splineThru([...rest].reverse().map(v).slice(1).concat([v(start)]))
+  const cabin = new THREE.Shape()
+  cabin.moveTo(...s.cabin[0])
+  cabin.splineThru(s.cabin.slice(1).map(v))
+  cabin.closePath()
+  carParts[kind] = {
+    body: roundedSlab(body, s.width, 0.08, 0.2),
+    cabin: roundedSlab(cabin, s.cabinWidth, 0.04, 0.16),
+  }
+  return carParts[kind]
+}
+
+const lampGeometry = new THREE.SphereGeometry(1, 16, 10)
+const glassMaterial = new THREE.MeshStandardMaterial({ color: '#26323c', metalness: 0.5, roughness: 0.08 })
+
+function Lamp({ position, scale, color, glow }) {
+  return (
+    <mesh geometry={lampGeometry} position={position} scale={scale}>
+      <meshStandardMaterial color={color} emissive={glow} emissiveIntensity={0.45} roughness={0.2} />
+    </mesh>
+  )
+}
+
+export function Car({ color = '#e8e8e8', suv = false }) {
+  const s = CAR_SPECS[suv ? 'suv' : 'sedan']
+  const { body, cabin } = carShapes(suv ? 'suv' : 'sedan')
+  const paint = useMemo(() => new THREE.MeshStandardMaterial({ color, metalness: 0.2, roughness: 0.3 }), [color])
   return (
     <group>
-      <mesh castShadow receiveShadow geometry={body}>
-        <meshStandardMaterial {...paint} />
-      </mesh>
-      <mesh castShadow geometry={cabin}>
-        <meshStandardMaterial color="#1f2830" metalness={0.4} roughness={0.08} />
-      </mesh>
-      {/* Painted roof, the pillar between the doors, roof rails on the SUV */}
-      <Box size={[1.5, 0.05, suv ? 2.25 : 1.0]} position={[0, roofTop + 0.02, suv ? -0.85 : -0.33]} {...paint} />
-      {[-1, 1].map((sd) => (
-        <Box key={sd} size={[0.03, roofTop - top, 0.1]} position={[sd * 0.79, (top + roofTop) / 2, suv ? -0.45 : -0.3]} color="#151a1f" />
-      ))}
-      {suv && [-0.62, 0.62].map((x) => <Box key={x} size={[0.05, 0.06, 2.1]} position={[x, roofTop + 0.07, -0.85]} color="#222" />)}
-      {/* Front grille, bumpers, lights, mirrors, door handles and door lines */}
-      <Box size={[0.95, 0.2, 0.04]} position={[0, light - 0.1, 2.33]} color="#111" />
-      <Box size={[1.7, 0.16, 0.12]} position={[0, wy + 0.06, 2.29]} color="#2b2e33" roughness={0.6} />
-      <Box size={[1.7, 0.16, 0.12]} position={[0, wy + 0.06, -2.29]} color="#2b2e33" roughness={0.6} />
+      <mesh castShadow receiveShadow geometry={body} material={paint} />
+      <mesh castShadow geometry={cabin} material={glassMaterial} />
       {[-1, 1].map((sd) => (
         <group key={sd}>
-          <Box size={[0.38, 0.11, 0.05]} position={[sd * 0.62, light, 2.32]} color="#f4f4f0" emissive="#fff6d8" emissiveIntensity={0.4} />
-          <Box size={[0.42, 0.1, 0.05]} position={[sd * 0.62, light, -2.32]} color="#b0141c" emissive="#ff1a1a" emissiveIntensity={0.25} />
-          <Box size={[0.16, 0.1, 0.07]} position={[sd * 0.97, top + 0.06, 0.72]} {...paint} />
-          <Box size={[0.02, 0.03, 0.16]} position={[sd * 0.915, top - 0.14, -0.15]} color="#2a2a2a" />
-          <Box size={[0.02, top - wy - 0.15, 0.02]} position={[sd * 0.915, (top + wy) / 2 + 0.02, suv ? 0.05 : -0.2]} color="#1c1c1c" />
+          {/* headlights, tail lights, side mirrors */}
+          <Lamp position={[sd * 0.56, s.head[0], s.head[1]]} scale={[0.22, 0.065, 0.06]} color="#f6f6f2" glow="#fff3cf" />
+          <Lamp position={[sd * 0.58, s.tail[0], s.tail[1]]} scale={[0.24, 0.055, 0.06]} color="#b3121a" glow="#ff1c1c" />
+          <mesh geometry={lampGeometry} material={paint} position={[sd * 0.9, s.belt + 0.06, s.mirrorZ]} scale={[0.1, 0.06, 0.08]} />
         </group>
       ))}
-      <Plate text="NFT 4821" position={[0, wy + 0.26, -2.34]} />
-      <Plate text="NFT 4821" position={[0, wy + 0.26, 2.36]} rotation={[0, 0, 0]} />
-      {[[-0.82, 1.4], [0.82, 1.4], [-0.82, -1.4], [0.82, -1.4]].map(([x, z], i) => (
-        <Wheel key={i} position={[x, wy, z]} r={wy} w={0.24} />
+      {/* dark grille under the hood, plates */}
+      <mesh geometry={lampGeometry} position={[0, s.head[0] - 0.16, s.head[1] + 0.02]} scale={[0.42, 0.06, 0.05]}>
+        <meshStandardMaterial color="#121212" roughness={0.5} />
+      </mesh>
+      <Plate text="NFT 4821" position={[0, s.bottom + 0.12, -2.31]} />
+      <Plate text="NFT 4821" position={[0, s.bottom + 0.06, 2.33]} rotation={[0, 0, 0]} />
+      {[[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([x, z], i) => (
+        <Wheel key={i} position={[x * 0.76, s.wheelY, z * s.wheelZ]} r={s.wheelY} w={0.24} />
       ))}
-      {driver && <Driver position={[-0.4, top - 0.45, 0.05]} />}
     </group>
   )
 }
