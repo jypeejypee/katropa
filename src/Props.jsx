@@ -396,7 +396,7 @@ export function SkyAndClouds({ time, low }) {
         <points geometry={stars} visible={time.stars}>
           <pointsMaterial color="#ffffff" size={1.6} sizeAttenuation={false} fog={false} depthWrite={false} />
         </points>
-        <sprite position={[-120, 150, -220]} scale={[34, 34, 1]} visible={time.stars}>
+        <sprite position={time.moon ?? [0, 52, -270]} scale={[30, 30, 1]} visible={time.stars} renderOrder={1}>
           <spriteMaterial map={moonTexture()} transparent fog={false} depthWrite={false} />
         </sprite>
       </group>
