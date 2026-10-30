@@ -10,7 +10,7 @@ import { isTyping } from './network.js'
 import { Person, animatePerson, SIT_DROP } from './Person.jsx'
 import SpeechBubble from './SpeechBubble.jsx'
 import { Skateboard } from './Skatepark.jsx'
-import { SKATE, POINTS } from './skate.js'
+import { SKATE, POINTS, DECK_LIFT } from './skate.js'
 
 const WALK_SPEED = 3
 const RUN_SPEED = 7
@@ -28,6 +28,9 @@ const direction = new THREE.Vector3()
 const lookTarget = new THREE.Vector3()
 const cameraGoal = new THREE.Vector3()
 const offset = new THREE.Vector3()
+const slope = new THREE.Vector3() // which way the ground under the skateboard faces
+const nose = new THREE.Vector3(0, 0, 1) // the skateboard spins around this for a kickflip
+const spin = new THREE.Quaternion()
 
 export default function Player() {
   const body = useRef()
@@ -225,10 +228,20 @@ export default function Player() {
         } else rolling *= Math.exp(-SKATE.coast * delta)
       }
 
+      // Put the board on whatever is under you, tilted like the ground (ramps, curbs).
+      // On a slope the round bottom of the body rides higher than on flat ground, so look straight down.
+      groundRay.current.origin = { x: pos.x, y: pos.y, z: pos.z }
+      const below = world.castRayAndGetNormal(groundRay.current, 1.3, true, undefined, undefined, undefined, body.current)
+      const ground = below ? -(below.timeOfImpact ?? below.toi) : -0.9 // where the ground is, under the body's middle
+      if (below) slope.set(below.normal.x, below.normal.y, below.normal.z).applyAxisAngle(up, -model.current.rotation.y)
+      else slope.copy(up)
+      sk.ground = sk.air ? -0.9 : THREE.MathUtils.damp(sk.ground ?? ground, ground, 25, delta)
+
       // Tricks: spin the board for a kickflip, and score when you land
       const flip = (t - sk.flipStart) / SKATE.flipTime
-      board.current.rotation.z = flip < 1 ? flip * Math.PI * 2 : 0
-      board.current.position.y = -0.82 + (flip < 1 ? Math.sin(flip * Math.PI) * 0.25 : 0)
+      board.current.quaternion.setFromUnitVectors(up, sk.air ? up : slope)
+        .multiply(spin.setFromAxisAngle(nose, flip < 1 ? flip * Math.PI * 2 : 0))
+      board.current.position.y = sk.ground + 0.08 + (flip < 1 ? Math.sin(flip * Math.PI) * 0.25 : 0)
       if (!grounded && !sk.air) {
         sk.air = true
         sk.airStart = t
@@ -264,8 +277,10 @@ export default function Player() {
       direction.set(Math.sin(sk.heading) * rolling, 0, Math.cos(sk.heading) * rolling)
       model.current.rotation.y = lerpAngle(model.current.rotation.y, sk.heading, 1 - Math.exp(-14 * delta))
       // Stand sideways on the board (the 3D characters' skate animations already stand that way)
-      tilt.current.rotation.set(0, getGame().avatar.model === 'custom' ? Math.PI / 2 : 0, 0)
-      tilt.current.position.y = 0.12
+      const { model: look } = getGame().avatar
+      tilt.current.rotation.set(0, look === 'custom' ? Math.PI / 2 : 0, 0)
+      // Soles on the deck (each kind of character has a different shoe thickness)
+      tilt.current.position.y = sk.ground + 0.9 + (DECK_LIFT[look] ?? DECK_LIFT.custom)
     } else if (diving) {
       // Fly forward, slide a little, then lie there before getting up
       const slide = diveTime < DIVE_FLY ? 1 : Math.max(0, 1 - (diveTime - DIVE_FLY) / 0.35) * 0.35

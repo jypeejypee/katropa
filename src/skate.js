@@ -37,6 +37,10 @@ export const SKATE = {
   flipTime: 0.45, // seconds for one kickflip
 }
 
+// How far to lift each kind of character so their soles rest on the deck (meters).
+// Mixamo's Skateboarding animations already stand on a board, so the 3D characters need no lift.
+export const DECK_LIFT = { custom: 0.135, pinoy: 0, pinay: 0 }
+
 // Points for landing tricks
 export const POINTS = { ollie: 10, kickflip: 50, air: 25 }
 

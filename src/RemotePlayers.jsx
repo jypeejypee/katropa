@@ -9,6 +9,7 @@ import { setPeerVolume } from './voice.js'
 import { signTexture } from './textures.js'
 import SpeechBubble from './SpeechBubble.jsx'
 import { Skateboard } from './Skatepark.jsx'
+import { DECK_LIFT } from './skate.js'
 
 const target = new THREE.Vector3()
 
@@ -55,7 +56,7 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
     // On a skateboard: standing sideways on the board
     board.current.visible = !!t.skate
     tilt.current.rotation.y = t.skate && !own ? Math.PI / 2 : 0
-    if (t.skate) tilt.current.position.y = 0.12
+    if (t.skate) tilt.current.position.y = DECK_LIFT[avatar?.model] ?? DECK_LIFT.custom
     // Holding a paddle and swinging it while playing pickleball
     const playing = !!pbNet.state?.players.some((pl) => pl.id === id)
     if (paddle.current) paddle.current.visible = playing
