@@ -361,53 +361,76 @@ const MOON_PATH = { start: 10, length: 170, width: 12 }
 export function MoonPath({ moon, water, on }) {
   const group = useRef()
   const dir = useMemo(() => new THREE.Vector2(moon[0], moon[2]).normalize(), [moon])
-  useFrame(({ camera }) => {
+  const material = useRef()
+  useFrame(({ camera, clock }) => {
     const g = group.current
     g.visible = on
     if (!on) return
     const ahead = MOON_PATH.start + MOON_PATH.length / 2
     const [z0, z1] = water.z
+    // the little waves make the shine sway a bit and twinkle
+    const t = clock.elapsedTime
+    const sway = Math.sin(t * 0.5) * 0.35
+    material.current.opacity = 0.8 + 0.2 * Math.sin(t * 1.7) * Math.sin(t * 0.6)
+    // the glints drift slowly along with the river
+    moonPathTextures().glints.offset.y = 1 - ((t * 0.012) % 1)
     // follow you, but always stay on the water
     g.position.set(
-      camera.position.x + dir.x * ahead,
+      camera.position.x + dir.x * ahead - dir.y * sway,
       water.y + 0.02,
-      THREE.MathUtils.clamp(camera.position.z + dir.y * ahead, z0 + MOON_PATH.width / 2, z1 - MOON_PATH.width / 2),
+      THREE.MathUtils.clamp(camera.position.z + dir.y * ahead + dir.x * sway, z0 + MOON_PATH.width / 2, z1 - MOON_PATH.width / 2),
     )
   })
   return (
     <group ref={group} rotation={[0, Math.atan2(dir.x, dir.y), 0]} visible={false}>
       <mesh rotation={[Math.PI / 2, 0, 0]} renderOrder={1}>
         <planeGeometry args={[MOON_PATH.width, MOON_PATH.length]} />
-        <meshBasicMaterial map={moonPathTexture()} transparent blending={THREE.AdditiveBlending}
+        <meshBasicMaterial ref={material} map={moonPathTextures().glints} alphaMap={moonPathTextures().shape} transparent blending={THREE.AdditiveBlending}
           depthWrite={false} side={THREE.DoubleSide} fog={false} toneMapped={false} />
       </mesh>
     </group>
   )
 }
 
-// Glints on the water: short bright lines, most in the middle, fading near you and far away
-let pathTexture = null
-function moonPathTexture() {
-  if (pathTexture) return pathTexture
-  const canvas = document.createElement('canvas')
-  canvas.width = 128
-  canvas.height = 1024
-  const ctx = canvas.getContext('2d')
+// Two pictures for the moon's shine:
+//   glints: short bright lines all over (it repeats, and slowly drifts with the river)
+//   shape: where the shine shows (bright in the middle, fading to the sides, near you and far away); it stays put
+let pathTextures = null
+function moonPathTextures() {
+  if (pathTextures) return pathTextures
+  const glintCanvas = document.createElement('canvas')
+  glintCanvas.width = 128
+  glintCanvas.height = 512
+  const g = glintCanvas.getContext('2d')
+  g.fillStyle = '#000000'
+  g.fillRect(0, 0, 128, 512)
   const random = rng(17)
-  for (let i = 0; i < 2600; i++) {
-    const y = random() * canvas.height
-    const far = 1 - y / canvas.height // 0 = near you, 1 = far away (the top of the picture is the far end)
-    const fade = Math.min(1, far / 0.12) * Math.min(1, (1 - far) / 0.35)
-    // most glints near the middle line, fewer toward the sides
-    const spread = (random() + random() + random() - 1.5) / 1.5
-    const x = 64 + spread * 60
-    const alpha = fade * (1 - Math.abs(spread)) * (0.25 + random() * 0.6)
-    ctx.fillStyle = `rgba(220, 228, 255, ${alpha})`
-    ctx.fillRect(x - 3 - random() * 10, y, 6 + random() * 20, 1 + random() * 2)
+  for (let i = 0; i < 1400; i++) {
+    const y = random() * 512
+    g.fillStyle = `rgba(220, 228, 255, ${0.3 + random() * 0.7})`
+    g.fillRect(random() * 128 - 6, y, 6 + random() * 18, 1 + random() * 2)
   }
-  pathTexture = new THREE.CanvasTexture(canvas)
-  pathTexture.colorSpace = THREE.SRGBColorSpace
-  return pathTexture
+  const glints = new THREE.CanvasTexture(glintCanvas)
+  glints.colorSpace = THREE.SRGBColorSpace
+  glints.wrapS = glints.wrapT = THREE.RepeatWrapping
+  glints.repeat.set(1, 3)
+
+  const shapeCanvas = document.createElement('canvas')
+  shapeCanvas.width = 64
+  shapeCanvas.height = 256
+  const s = shapeCanvas.getContext('2d')
+  for (let y = 0; y < 256; y++) {
+    const far = 1 - y / 256 // 0 = near you, 1 = far away (the top of the picture is the far end)
+    const fade = Math.min(1, far / 0.12) * Math.min(1, (1 - far) / 0.35)
+    for (let x = 0; x < 64; x++) {
+      const side = Math.abs(x - 31.5) / 32 // 0 in the middle, 1 at the edge
+      const v = Math.round(255 * fade * Math.exp(-side * side * 4))
+      s.fillStyle = `rgb(${v}, ${v}, ${v})`
+      s.fillRect(x, y, 1, 1)
+    }
+  }
+  pathTextures = { glints, shape: new THREE.CanvasTexture(shapeCanvas) }
+  return pathTextures
 }
 
 // Sky dome, clouds, and (at night) stars and the moon. time: settings from timeOfDay.js, moon: where it is (maps.js)

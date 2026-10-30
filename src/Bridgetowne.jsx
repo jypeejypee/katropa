@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { useFrame } from '@react-three/fiber'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import StaticBatch from './StaticBatch.jsx'
 import { Skatepark } from './Skatepark.jsx'
@@ -228,6 +229,18 @@ export default memo(function Bridgetowne() {
       </StaticBatch>
       {/* Moving things stay outside the StaticBatch */}
       <Traffic cars={traffic} start={START} end={END} court={false} />
+      <RiverFlow />
     </>
   )
 })
+
+// The Pasig River flows slowly (toward -x): the water's pattern drifts along
+const RIVER_SPEED = 0.35 // meters per second
+function RiverFlow() {
+  useFrame((_, delta) => {
+    const water = riverTexture([48, 5])
+    // one picture of the pattern is (river length / 48) meters long
+    water.offset.x = (water.offset.x + (Math.min(delta, 0.1) * RIVER_SPEED * 48) / 640) % 1
+  })
+  return null
+}
