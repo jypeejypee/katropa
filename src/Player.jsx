@@ -263,8 +263,8 @@ export default function Player() {
 
       direction.set(Math.sin(sk.heading) * rolling, 0, Math.cos(sk.heading) * rolling)
       model.current.rotation.y = lerpAngle(model.current.rotation.y, sk.heading, 1 - Math.exp(-14 * delta))
-      // Stand sideways on the board
-      tilt.current.rotation.set(0, Math.PI / 2, 0)
+      // Stand sideways on the board (the 3D characters' skate animations already stand that way)
+      tilt.current.rotation.set(0, getGame().avatar.model === 'custom' ? Math.PI / 2 : 0, 0)
       tilt.current.position.y = 0.12
     } else if (diving) {
       // Fly forward, slide a little, then lie there before getting up
@@ -311,6 +311,7 @@ export default function Player() {
       getGame().avatar.gender === 'female')
     limbs.current.motion.air = !grounded && !diving
     limbs.current.motion.dive = diving
+    limbs.current.motion.skate = skating
 
     // 5. Camera
     model.current.visible = !v.firstPerson

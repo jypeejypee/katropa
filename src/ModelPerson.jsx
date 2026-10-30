@@ -14,7 +14,7 @@ export const MODEL_FILES = {
 const HEIGHT = 1.75 // meters, from feet to the top of the head
 const FADE = 0.2 // seconds to blend from one animation to the next
 
-// A 3D character from a GLB file with Mixamo animations (idle, walk, run, sit, jump).
+// A 3D character from a GLB file with Mixamo animations (idle, walk, run, sit, jump, dive, and skate/push on a skateboard).
 // It reads what the body is doing from limbs.current.motion (set by animatePerson in Person.jsx).
 export default function ModelPerson({ model, limbs, paddleRef }) {
   const { scene, animations } = useGLTF(MODEL_FILES[model])
@@ -79,7 +79,9 @@ export default function ModelPerson({ model, limbs, paddleRef }) {
   useFrame(() => {
     const m = limbs.current.motion ?? {}
     let next = 'idle'
-    if (m.dive && actions.dive) next = 'dive'
+    // On the skateboard: kick the ground while pushing, otherwise ride crouched (also in the air)
+    if (m.skate && actions.skate) next = m.moving && actions.push ? 'push' : 'skate'
+    else if (m.dive && actions.dive) next = 'dive'
     else if (m.sit > 0.5) next = 'sit'
     else if (m.air) next = 'jump'
     else if (m.moving) next = m.speed > 5 ? 'run' : 'walk'

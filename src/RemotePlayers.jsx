@@ -54,7 +54,7 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
     tilt.current.position.y = (own ? 0 : -t.dive * 0.62) - SIT_DROP * t.sit
     // On a skateboard: standing sideways on the board
     board.current.visible = !!t.skate
-    tilt.current.rotation.y = t.skate ? Math.PI / 2 : 0
+    tilt.current.rotation.y = t.skate && !own ? Math.PI / 2 : 0
     if (t.skate) tilt.current.position.y = 0.12
     // Holding a paddle and swinging it while playing pickleball
     const playing = !!pbNet.state?.players.some((pl) => pl.id === id)
@@ -63,6 +63,7 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
     const swing = playing && since < SWING_TIME ? since / SWING_TIME : -1
     animatePerson(limbs, state.clock.elapsedTime, t.moving, playing ? 5 : 3, swing, t.sit, avatar?.gender === 'female')
     limbs.current.motion.dive = t.dive > 0.05
+    limbs.current.motion.skate = !!t.skate
   })
 
   return (

@@ -14,29 +14,132 @@ const TALK_DISTANCE = 2.8
 const CONCRETE = '#a9a7a2' // ramps: a bit darker than the ground so you can see them
 const COPING = '#8d9399' // metal edge on the ramps
 
+// ---------- The skateboard ----------
+// Sizes in meters. The deck is flat in the middle and kicks up at the nose and tail.
+const DECK = {
+  length: 0.8,
+  width: 0.21,
+  flat: 0.25, // half the length of the flat middle part
+  kick: 0.35, // how steeply the nose and tail go up
+  concave: 0.006, // the edges are a little higher than the middle
+  bottom: 0.092, // height of the underside of the deck above the ground
+  thick: 0.011,
+}
+const METAL = new THREE.MeshStandardMaterial({ color: '#c3c8ce', metalness: 0.7, roughness: 0.3 })
+const WHEEL = new THREE.MeshStandardMaterial({ color: '#f2efe6', roughness: 0.6 })
+const BEARING = new THREE.MeshStandardMaterial({ color: '#3a3d42', metalness: 0.5, roughness: 0.4 })
+const GRIP = new THREE.MeshStandardMaterial({ color: '#1b1b1d', roughness: 1 })
+const MAPLE = new THREE.MeshStandardMaterial({ color: '#d9b98c', roughness: 0.7 }) // the wood layers on the edge
+
+// Outline of the deck from above: straight sides with round ends.
+// Lots of points along the sides, so the deck can bend at the nose and tail.
+function deckOutline(scale) {
+  const w = (DECK.width / 2) * scale
+  const straight = (DECK.length / 2) * scale - w
+  const shape = new THREE.Shape()
+  const steps = 24
+  shape.moveTo(-w, -straight)
+  for (let i = 1; i <= steps; i++) shape.lineTo(-w, -straight + (2 * straight * i) / steps)
+  shape.absarc(0, straight, w, Math.PI, 0, true)
+  for (let i = 1; i <= steps; i++) shape.lineTo(w, straight - (2 * straight * i) / steps)
+  shape.absarc(0, -straight, w, 0, Math.PI, true)
+  return shape
+}
+
+// Lay a flat outline down along z and bend it: the kicktails go up, the edges curve up a little
+function bend(geometry, lift) {
+  const p = geometry.attributes.position
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i)
+    const z = -p.getY(i)
+    const along = Math.abs(z)
+    let y = DECK.bottom + p.getZ(i) + lift
+    if (along > DECK.flat) y += (along - DECK.flat) * DECK.kick
+    y += DECK.concave * (x / (DECK.width / 2)) ** 2
+    p.setXYZ(i, x, y, z)
+  }
+  geometry.computeVertexNormals()
+  return geometry
+}
+
+// The shapes are the same for every board, so they're made only once
+let boardShapes = null
+function getBoardShapes() {
+  if (boardShapes) return boardShapes
+  const deck = bend(new THREE.ExtrudeGeometry(deckOutline(1), {
+    depth: DECK.thick, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.003, bevelSegments: 1, curveSegments: 12,
+  }), 0)
+  // the grip tape sits just above the deck's top (which is thick + its 2 mm rounded edge)
+  const grip = bend(new THREE.ShapeGeometry(deckOutline(0.985), 12), DECK.thick + 0.0045)
+  boardShapes = { deck, grip }
+  return boardShapes
+}
+
+// The colored bottom of the deck: a white stripe down the middle and KATROPA written along it
+const deckTextures = new Map()
+function deckTexture(color) {
+  if (deckTextures.has(color)) return deckTextures.get(color)
+  const canvas = document.createElement('canvas')
+  canvas.width = 128
+  canvas.height = 512
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = color
+  ctx.fillRect(0, 0, 128, 512)
+  ctx.fillStyle = 'rgba(255,255,255,0.9)'
+  ctx.fillRect(52, 0, 24, 512)
+  ctx.save()
+  ctx.translate(64, 256)
+  ctx.rotate(-Math.PI / 2)
+  ctx.fillStyle = '#111111'
+  ctx.font = 'bold 30px Arial, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('KATROPA', 0, 0)
+  ctx.restore()
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  // The deck's texture coordinates are in meters around its middle: stretch the picture over the whole deck
+  texture.repeat.set(1 / DECK.width, 1 / DECK.length)
+  texture.offset.set(0.5, 0.5)
+  const material = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.6 })
+  deckTextures.set(color, material)
+  return material
+}
+
 // Skateboard, built along z (the nose points to +z), with the wheels standing on y = 0
 export function Skateboard({ deck = '#e63946' }) {
+  const { deck: deckShape, grip } = getBoardShapes()
+  const bottomMaterial = deckTexture(deck)
   return (
     <group>
-      <mesh castShadow position={[0, 0.1, 0]}>
-        <boxGeometry args={[0.22, 0.025, 0.8]} />
-        <meshStandardMaterial color={deck} />
-      </mesh>
-      <mesh position={[0, 0.114, 0]}>
-        <boxGeometry args={[0.215, 0.004, 0.76]} />
-        <meshStandardMaterial color="#1c1c1c" roughness={0.95} />
-      </mesh>
-      {[-0.27, 0.27].map((z) => (
-        <group key={z}>
-          <mesh position={[0, 0.07, z]}>
-            <boxGeometry args={[0.16, 0.04, 0.05]} />
-            <meshStandardMaterial color="#b7bcc2" metalness={0.6} roughness={0.35} />
+      {/* Deck: colored top and bottom, wood on the edge; black grip tape on top */}
+      <mesh castShadow geometry={deckShape} material={[bottomMaterial, MAPLE]} />
+      <mesh geometry={grip} material={GRIP} />
+      {[-0.24, 0.24].map((z) => (
+        <group key={z} position={[0, 0, z]}>
+          {/* Truck: base plate under the deck, the hanger, and the axle */}
+          <mesh position={[0, DECK.bottom - 0.006, 0]} material={METAL}>
+            <boxGeometry args={[0.065, 0.012, 0.085]} />
           </mesh>
-          {[-0.09, 0.09].map((x) => (
-            <mesh key={x} position={[x, 0.035, z]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.035, 0.035, 0.035, 10]} />
-              <meshStandardMaterial color="#f4f1e6" />
-            </mesh>
+          <mesh position={[0, 0.07, 0]} material={METAL}>
+            <cylinderGeometry args={[0.009, 0.009, 0.03, 8]} />
+          </mesh>
+          <mesh castShadow position={[0, 0.048, 0]} material={METAL}>
+            <boxGeometry args={[0.15, 0.024, 0.032]} />
+          </mesh>
+          <mesh position={[0, 0.028, 0]} rotation={[0, 0, Math.PI / 2]} material={METAL}>
+            <cylinderGeometry args={[0.005, 0.005, 0.2, 6]} />
+          </mesh>
+          {/* Wheels with dark bearings */}
+          {[-0.095, 0.095].map((x) => (
+            <group key={x} position={[x, 0.028, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <mesh castShadow material={WHEEL}>
+                <cylinderGeometry args={[0.028, 0.028, 0.032, 16]} />
+              </mesh>
+              <mesh material={BEARING}>
+                <cylinderGeometry args={[0.012, 0.012, 0.034, 10]} />
+              </mesh>
+            </group>
           ))}
         </group>
       ))}
@@ -111,11 +214,13 @@ export function Andrew() {
   const body = useRef()
   const model = useRef()
   const limbs = useRef({ legs: [], arms: [] })
+  const paddle = useRef() // every character can hold a pickleball paddle; Andrew doesn't
   const near = useRef(false)
   const { mode } = useGame()
 
   useFrame((state, delta) => {
     if (!body.current) return
+    if (paddle.current) paddle.current.visible = false
     const [hx, , hz] = ANDREW_HOME
     // The player looks at whoever they're talking to (npcPos); here that's Andrew
     npcPos.set(hx, 0.1, hz)
@@ -141,7 +246,7 @@ export function Andrew() {
           e.stopPropagation()
           setGame({ mode: 'talk', dialogue: 'start' })
         }}>
-        <Person limbs={limbs} avatar={ANDREW_AVATAR} />
+        <Person limbs={limbs} avatar={ANDREW_AVATAR} paddleRef={paddle} />
         {/* His board, standing on its tail next to him (he lends it to you when you skate) */}
         {mode !== 'skate' && (
           <group position={[0.42, -0.86, 0.15]} rotation={[-1.25, 0, 0]}>
