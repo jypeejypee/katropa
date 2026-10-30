@@ -1,5 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import { streetLamps } from './houses.js'
+import { playerPos } from './world.js'
 import { lamps as btLamps, LAMP_ARM, LAMP_HEIGHT } from './bridgetowne.js'
 import { victorMaterial, nightGlass } from './BridgetowneLandmarks.jsx'
 
@@ -15,9 +17,28 @@ function Led({ x, y, z, on }) {
   )
 }
 
+// Smooth graphics: only the few street lights closest to you really light up (they follow you as you walk).
+// Many lights are slow on phones, but 3 are fine. heads = [[x, y, z], ...] where the lamp heads are.
+const NEAR_COUNT = 3
+function NearLamps({ heads, brightness }) {
+  const lights = useRef([])
+  const last = useRef(null)
+  useFrame(() => {
+    // Only re-pick the lamps after walking a bit
+    if (last.current && Math.abs(last.current - playerPos.z) < 2) return
+    last.current = playerPos.z
+    const nearest = [...heads].sort((a, b) =>
+      Math.hypot(a[0] - playerPos.x, a[2] - playerPos.z) - Math.hypot(b[0] - playerPos.x, b[2] - playerPos.z))
+    lights.current.forEach((light, i) => light && nearest[i] && light.position.set(...nearest[i]))
+  })
+  return Array.from({ length: NEAR_COUNT }, (_, i) => (
+    <pointLight key={i} ref={(l) => (lights.current[i] = l)} color={WARM} intensity={brightness} distance={30} decay={2} />
+  ))
+}
+
 // Lights that turn on at night. brightness 0 = off (daytime).
 // They always exist (just at 0 brightness) so switching time of day doesn't stutter.
-// low (Smooth graphics): skip the real lights, they are slow on phones. The lamp heads still glow.
+// low (Smooth graphics): only the lamps near you light up (NearLamps). All lamp heads still glow.
 export default function NightLights({ brightness, low, map }) {
   return map === 'bridgetowne'
     ? <BridgetowneLights brightness={brightness} low={low} />
@@ -27,8 +48,10 @@ export default function NightLights({ brightness, low, map }) {
 // Every street light, the stone uplights at TNLF, and the bulb under the KALIDAD roof
 function TaytayLights({ brightness, low }) {
   const on = brightness > 0
+  const heads = useMemo(() => streetLamps.map(({ x, z }) => [x + (x > 0 ? -1 : 1) * 2.1, 7.3, z]), [])
   return (
     <>
+      {low && <NearLamps heads={heads} brightness={brightness} />}
       {streetLamps.map(({ x, z }, i) => {
         const headX = x + (x > 0 ? -1 : 1) * 2.1
         return (
@@ -57,10 +80,16 @@ function BridgetowneLights({ brightness, low }) {
     victorMaterial.emissiveIntensity = on ? 0.55 : 0
     nightGlass.emissiveIntensity = on ? 0.35 : 0
   }, [on])
-  return btLamps.map((z) => (
-    <group key={z}>
-      {!low && <pointLight position={[0, LAMP_HEIGHT - 0.5, z]} color={WARM} intensity={brightness * 1.3} distance={34} decay={2} />}
-      {[-1, 1].map((s) => <Led key={s} x={s * LAMP_ARM} y={LAMP_HEIGHT - 0.01} z={z} on={on} />)}
-    </group>
-  ))
+  const heads = useMemo(() => btLamps.map((z) => [0, LAMP_HEIGHT - 0.5, z]), [])
+  return (
+    <>
+      {low && <NearLamps heads={heads} brightness={brightness * 1.3} />}
+      {btLamps.map((z) => (
+        <group key={z}>
+          {!low && <pointLight position={[0, LAMP_HEIGHT - 0.5, z]} color={WARM} intensity={brightness * 1.3} distance={34} decay={2} />}
+          {[-1, 1].map((s) => <Led key={s} x={s * LAMP_ARM} y={LAMP_HEIGHT - 0.01} z={z} on={on} />)}
+        </group>
+      ))}
+    </>
+  )
 }
