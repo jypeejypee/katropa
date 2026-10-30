@@ -80,6 +80,7 @@ export function connect({ name, room, map, avatar, adminCode }) {
     setGame({ timeSetting, time: timeSetting === 'auto' ? timeFromClock() : timeSetting })
   })
   socket.on('notice', (text) => toast(text))
+  socket.on('admin-log', (log) => setGame({ adminLog: log }))
 
   // 2-player pickleball: the server sends the ball and score many times a second
   socket.on('pb-state', (state) => {
@@ -130,6 +131,11 @@ export function sendPb(event, data) {
 // Admin only (the server checks): change a setting for everyone in the room
 export function adminSet(changes) {
   if (socket?.connected) socket.emit('admin-set', changes)
+}
+
+// Admin only: ask the server for the record of visitors and chat
+export function requestAdminLog() {
+  if (socket?.connected) socket.emit('admin-log')
 }
 
 export const isOnline = () => !!socket?.connected

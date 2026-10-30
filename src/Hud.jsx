@@ -4,7 +4,7 @@ import { dialogue, NPC_NAME } from './dialogue.js'
 import { andrewDialogue, ANDREW_NAME } from './skate.js'
 import { playerState, touchInput, COURT } from './world.js'
 import { TIMES, TIME_ORDER, timeFromClock } from './timeOfDay.js'
-import { isTyping, sendChat, sendPb, adminSet, isOnline, toast } from './network.js'
+import { isTyping, sendChat, sendPb, adminSet, isOnline, toast, requestAdminLog } from './network.js'
 import CharacterCreator from './CharacterCreator.jsx'
 import { startVoice, stopVoice, toggleMute } from './voice.js'
 
@@ -503,8 +503,37 @@ function AdminPanel({ game }) {
               </button>
             ))}
           </div>
+          <VisitorLog log={game.adminLog} />
         </div>
       )}
     </div>
+  )
+}
+
+// Who came in, their names, and what they said (since the server last started)
+function VisitorLog({ log }) {
+  useEffect(() => {
+    requestAdminLog()
+    const timer = setInterval(requestAdminLog, 10000)
+    return () => clearInterval(timer)
+  }, [])
+  if (!log) return <div className="admin-title">Kinukuha ang record...</div>
+  const joins = log.entries.filter((e) => e.type === 'join')
+  const names = [...new Set(joins.map((e) => e.name))]
+  const time = (at) => new Date(at).toLocaleString('en-PH', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+  return (
+    <>
+      <div className="admin-title">Pumasok mula {time(log.since)}: {joins.length} beses, {names.length} pangalan</div>
+      <div className="admin-names">{names.join(', ') || 'Wala pa'}</div>
+      <div className="admin-log">
+        {[...log.entries].reverse().map((e, i) => (
+          <div key={i} className={`log-${e.type}`}>
+            <span className="log-time">{time(e.at)}</span> <b>{e.name}</b>
+            {e.type === 'chat' ? `: ${e.text}` : e.type === 'join' ? ' pumasok' : ' umalis'}
+            <span className="log-room"> ({e.room})</span>
+          </div>
+        ))}
+      </div>
+    </>
   )
 }

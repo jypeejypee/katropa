@@ -14,6 +14,7 @@ import { setupPickleball } from './pickleball.js'
 import { timingSafeEqual } from 'node:crypto'
 
 const PORT = process.env.PORT || 3001
+const startedAt = Date.now()
 
 // Admin: the name "jaypee" plus the secret ADMIN_CODE (set it on Render: Environment -> ADMIN_CODE).
 // Without the right code, someone typing "jaypee" joins as a Guest.
@@ -42,6 +43,16 @@ const cleanNumber = (value) => (Number.isFinite(value) ? Math.max(-1000, Math.mi
 
 const pickleball = setupPickleball(io, players)
 
+// Record of who came in, who left and what they said (the admin can see it in the game).
+// Kept in memory only: it starts empty again when the server restarts or wakes up from sleep.
+// Each line is also printed, so it shows in Render's Logs too.
+const activity = []
+function record(type, player, text) {
+  activity.push({ at: Date.now(), type, name: player.name, room: player.room, text })
+  if (activity.length > 1000) activity.shift()
+  console.log(type === 'chat' ? `[chat] ${player.room} ${player.name}: ${text}` : `${player.name} ${type === 'join' ? 'joined' : 'left'} room "${player.room}"`)
+}
+
 io.on('connection', (socket) => {
   socket.on('join', ({ name, room, avatar, adminCode } = {}) => {
     const player = {
@@ -67,7 +78,7 @@ io.on('connection', (socket) => {
     socket.emit('settings', settingsOf(player.room))
     pickleball.greet(socket)
     socket.to(player.room).emit('playerJoined', player)
-    console.log(`${player.name} joined room "${player.room}" (${others.length + 1} here)`)
+    record('join', player)
   })
 
   socket.on('move', (m = {}) => {
@@ -96,6 +107,7 @@ io.on('connection', (socket) => {
     if (!clean) return
     player.lastChat = now
     io.to(player.room).emit('chat', { id: socket.id, name: player.name, color: player.color, text: clean, at: now })
+    record('chat', player, clean)
   })
 
   // ---------- Voice chat ----------
@@ -137,6 +149,12 @@ io.on('connection', (socket) => {
     io.to(player.room).emit('settings', next)
   })
 
+  // Admin asks for the record of visitors and chat (all rooms)
+  socket.on('admin-log', () => {
+    if (!players.get(socket.id)?.admin) return
+    socket.emit('admin-log', { since: startedAt, entries: activity })
+  })
+
   // 2-player pickleball
   socket.on('pb-join', () => pickleball.join(socket))
   socket.on('pb-swing', (s) => pickleball.swing(socket, s))
@@ -152,7 +170,7 @@ io.on('connection', (socket) => {
       sendVoiceUsers(player.room)
     }
     socket.to(player.room).emit('playerLeft', socket.id)
-    console.log(`${player.name} left room "${player.room}"`)
+    record('leave', player)
   })
 })
 

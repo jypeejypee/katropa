@@ -139,6 +139,9 @@ To change the face, edit `head()` in `tools/build-victor.mjs` and run it again
 
 - Type the name **jaypee** on the start screen and an **Admin code** box appears. With the right code you get the **⚙️ Admin** button:
   change the time of day (Auto / Noon / Afternoon / Night) **for everyone in the room**.
+- The Admin panel also shows **who came in** (how many times, which names) and **everything said in chat**, in all rooms,
+  newest first. It's kept in the server's memory only, so it starts over when the server restarts or wakes up from sleep
+  (Render's free plan sleeps after about 15 minutes with nobody playing). The same lines also go to **Render → katropa-server → Logs**.
 - The code is checked by the server. Set it on Render: **katropa-server → Environment → Add `ADMIN_CODE`**.
   On your laptop: `$env:ADMIN_CODE="your-code"; npm run server` (PowerShell).
 - Anyone who types "jaypee" without the right code joins as a Guest.

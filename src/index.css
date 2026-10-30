@@ -957,3 +957,23 @@ input {
   color: #222;
   font-weight: 700;
 }
+
+/* Admin: record of visitors and chat */
+.admin-names {
+  font-size: 12px;
+  margin: 2px 0 6px;
+  opacity: 0.9;
+}
+.admin-log {
+  max-height: 40vh;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.45;
+  width: min(360px, calc(100vw - 32px));
+}
+.admin-log .log-time,
+.admin-log .log-room {
+  opacity: 0.6;
+}
+.admin-log .log-join b { color: #8fe38f; }
+.admin-log .log-leave { opacity: 0.7; }
