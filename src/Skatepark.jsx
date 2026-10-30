@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useFrame, createPortal } from '@react-three/fiber'
 import { RigidBody, CapsuleCollider, ConvexHullCollider } from '@react-three/rapier'
 import * as THREE from 'three'
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js'
@@ -217,6 +217,9 @@ export function Andrew() {
   const paddle = useRef() // every character can hold a pickleball paddle; Andrew doesn't
   const near = useRef(false)
   const { mode } = useGame()
+  // His left forearm (from Person), so the board can sit in his hand and move with it
+  const [hand, setHand] = useState(null)
+  useEffect(() => setHand(limbs.current.elbows?.[1] ?? null), [])
 
   useFrame((state, delta) => {
     if (!body.current) return
@@ -247,11 +250,15 @@ export function Andrew() {
           setGame({ mode: 'talk', dialogue: 'start' })
         }}>
         <Person limbs={limbs} avatar={ANDREW_AVATAR} paddleRef={paddle} />
-        {/* His board, standing on its tail next to him (he lends it to you when you skate) */}
-        {mode !== 'skate' && (
-          <group position={[0.42, -0.86, 0.15]} rotation={[-1.25, 0, 0]}>
-            <Skateboard deck="#2a9d8f" />
-          </group>
+        {/* His board, carried in his left hand (he lends it to you when you skate) */}
+        {mode !== 'skate' && hand && createPortal(
+          // Held by the front truck: nose up, grip tape against his leg, wheels facing out
+          <group position={[0.05, -0.54, 0]} rotation={[0, Math.PI / 2, 0]}>
+            <group rotation={[-Math.PI / 2, 0, 0]}>
+              <Skateboard deck="#2a9d8f" />
+            </group>
+          </group>,
+          hand,
         )}
       </group>
       <sprite position={[0, 2.2, 0]} scale={[0.9, 0.28, 1]}>
