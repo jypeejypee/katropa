@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { RigidBody, CapsuleCollider } from '@react-three/rapier'
 import * as THREE from 'three'
-import { playerPos, npcPos, npcState, now, lerpAngle, ROAD_HALF_WIDTH } from './world.js'
+import { playerPos, npcPos, npcState, talkTarget, now, lerpAngle, ROAD_HALF_WIDTH } from './world.js'
 import { getGame, setGame } from './game.js'
 import { Person, animatePerson } from './Person.jsx'
 import { NPC_NAME, NPC_HOME } from './dialogue.js'
@@ -54,9 +54,11 @@ export default function Npc() {
 
     // Tell the screen when the player is close enough to talk
     const isNear = mode === 'walk' && dist < TALK_DISTANCE
+    if (isNear) talkTarget.copy(npcPos)
     if (isNear !== near.current) {
       near.current = isNear
-      setGame({ nearNpc: isNear })
+      if (isNear) setGame({ nearNpc: 'edson' })
+      else if (getGame().nearNpc === 'edson') setGame({ nearNpc: false })
     }
   })
 
@@ -66,9 +68,9 @@ export default function Npc() {
       {/* Tap or click Edson when close to talk (a drag to look around doesn't count) */}
       <group ref={model} position={[0, 0.9, 0]} rotation={[0, Math.PI, 0]}
         onClick={(e) => {
-          if (e.delta > 10 || !getGame().nearNpc || getGame().mode !== 'walk') return
+          if (e.delta > 10 || getGame().nearNpc !== 'edson' || getGame().mode !== 'walk') return
           e.stopPropagation()
-          setGame({ mode: 'talk', dialogue: 'start' })
+          setGame({ mode: 'talk', dialogue: 'start', talkingTo: 'edson' })
         }}>
         <Person limbs={limbs} avatar={EDSON_AVATAR} />
       </group>

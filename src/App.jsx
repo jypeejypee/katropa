@@ -4,6 +4,8 @@ import { KeyboardControls } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
 import Street from './Street.jsx'
 import Bridgetowne from './Bridgetowne.jsx'
+import Plaza from './Plaza.jsx'
+import { TaytayRecruits, BridgetowneRecruits } from './RecruitSpots.jsx'
 import { Andrew } from './Skatepark.jsx'
 import Player from './Player.jsx'
 import Npc from './Npc.jsx'
@@ -63,6 +65,7 @@ export default function App() {
   }, [touch])
   const time = TIMES[timeName]
   const taytay = map === 'tnlf' // Edson and pickleball are only in Taytay; Andrew and the skatepark are in Bridgetowne
+  const bridgetowne = map === 'bridgetowne'
   return (
     <>
       <KeyboardControls map={keyMap}>
@@ -84,9 +87,12 @@ export default function App() {
           <NightLights brightness={time.lamps} low={low} map={map} />
           {/* updatePriority -1: physics moves everything first, then the camera follows (see Player.jsx) */}
           <Physics gravity={[0, -9.81, 0]} updatePriority={-1}>
-            {taytay ? <Street /> : <Bridgetowne />}
-            <Player />
-            {taytay ? <Npc /> : <Andrew />}
+            {taytay && <Street />}
+            {bridgetowne && <Bridgetowne />}
+            {map === 'plaza' && <Plaza />}
+            <Player key={map} />
+            {taytay && <><Npc /><TaytayRecruits /></>}
+            {bridgetowne && <><Andrew /><BridgetowneRecruits /></>}
             {taytay && mode === 'pickleball' && <Pickleball />}
             {taytay && mode === 'pickleball2' && <Pickleball2P />}
             {/* Watching other players' game */}

@@ -4,7 +4,8 @@ import { playerPos, playerState } from './world.js'
 import { getGame, setGame } from './game.js'
 import { attachVoice } from './voice.js'
 import { timeFromClock } from './timeOfDay.js'
-import { serverRoom } from './maps.js'
+import { MAPS, serverRoom } from './maps.js'
+import { RECRUITS, onRecruit } from './recruits.js'
 
 // Where the multiplayer server is. By default it's reached through the game's own address
 // (vite.config.js passes it on to npm run server on port 3001).
@@ -18,6 +19,7 @@ export const remotePlayers = new Map()
 
 let socket = null
 let myId = null
+let joinInfo = null // what we joined with (to join again when moving to another place)
 
 // Tell React which players exist (only when someone joins or leaves)
 function updateList() {
@@ -36,13 +38,21 @@ function addPlayer(p) {
 
 export function connect({ name, room, map, avatar, adminCode }) {
   if (socket) return
+  joinInfo = { name, room, avatar, adminCode }
   setGame({ online: 'connecting' })
   socket = io(SERVER_URL, { transports: ['websocket'] })
   attachVoice(socket)
+  onRecruit((id) => socket.connected && socket.emit('recruit', id))
 
   socket.on('connect', () => {
-    socket.emit('join', { name, room: serverRoom(map, room), avatar, adminCode })
+    socket.emit('join', { ...joinInfo, room: serverRoom(getGame().map, joinInfo.room), recruited: getGame().recruited })
     setGame({ online: 'online' })
+  })
+  // What's open in the Plaza (shared by everyone), and who opened it
+  socket.on('plaza', ({ open, by }) => {
+    const mine = getGame().recruited
+    setGame({ plaza: [...new Set([...open, ...mine])] })
+    if (by && RECRUITS[by.id]) toast(`Bukas na sa Plaza: ${RECRUITS[by.id].stall}! (salamat kay ${by.player})`)
   })
   socket.on('connect_error', () => setGame({ online: 'offline' }))
   socket.on('disconnect', () => {
@@ -131,6 +141,24 @@ export function sendPb(event, data) {
 // Admin only (the server checks): change a setting for everyone in the room
 export function adminSet(changes) {
   if (socket?.connected) socket.emit('admin-set', changes)
+}
+
+// Go to another place (the Plaza, Taytay, Bridgetowne): the 3D world switches over,
+// and on the server you move to that place's room (so you meet the players there)
+export function travelTo(map) {
+  if (!MAPS[map] || map === getGame().map) return
+  remotePlayers.clear()
+  updateList()
+  setGame({ map, mode: 'walk', dialogue: null, nearNpc: false, talkingTo: null, pb: null, watching: false })
+  try {
+    const saved = JSON.parse(localStorage.getItem('street-game-player') ?? '{}')
+    localStorage.setItem('street-game-player', JSON.stringify({ ...saved, map }))
+  } catch {
+    // private window: fine
+  }
+  if (socket?.connected && joinInfo) {
+    socket.emit('join', { ...joinInfo, room: serverRoom(map, joinInfo.room), recruited: getGame().recruited })
+  }
 }
 
 // Admin only: ask the server for the record of visitors and chat

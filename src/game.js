@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { DEFAULT_AVATAR } from './avatar.js'
 import { timeFromClock } from './timeOfDay.js'
+import { loadRecruited } from './recruits.js'
 
 // The game "mode" and what the screen should show.
 //   mode: 'start' (typing your name), 'walk' (walking around), 'talk' (talking to Edson), 'pickleball' (playing)
@@ -14,7 +15,8 @@ let state = {
   // 'low' = Smooth (no shadows, fewer lights; best for phones), 'high' = Pretty
   quality: isTouch ? 'low' : 'high',
   mode: 'start',
-  nearNpc: false,
+  nearNpc: false, // id of the person you're close enough to talk to (see talkers in Hud.jsx), or false
+  talkingTo: null, // id of the person you're talking to
   dialogue: null, // which line of dialogue.js is showing
   score: [0, 0], // [you, Edson]
   skateScore: 0, // skateboard points this time (see skate.js)
@@ -30,7 +32,11 @@ let state = {
   playerName: '',
   avatar: DEFAULT_AVATAR, // your character's look (see avatar.js)
   room: 'tnlf',
-  map: 'tnlf', // which place you walk around in: 'tnlf' or 'bridgetowne' (see maps.js)
+  map: 'tnlf', // which place you walk around in: 'plaza', 'tnlf' or 'bridgetowne' (see maps.js)
+  recruited: loadRecruited(), // your katropa: ids from recruits.js (saved in this browser)
+  plaza: [], // what's open in the Plaza, for everyone (from the server): ids from recruits.js
+  nenaQuest: undefined, // Aling Nena's lost bayong: 'looking', then 'found'
+  katropaOpen: false, // showing the katropa list
   online: 'offline', // 'connecting', 'online' or 'offline'
   others: [], // other players in the room: [{ id, name, color }]
   chat: [], // last chat messages: [{ id, name, color, text, at }]

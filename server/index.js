@@ -38,6 +38,13 @@ const players = new Map()
 const roomSettings = new Map()
 const settingsOf = (room) => roomSettings.get(room) ?? { time: 'auto' }
 
+// The Plaza, shared by everyone in every room: which recruits have opened their place (see src/recruits.js).
+// The server forgets it when it restarts, but every player's browser remembers who they recruited
+// and sends it on joining, so the Plaza fills back up as soon as people come back.
+const PLAZA_IDS = ['nena', 'andrew', 'jun']
+const plazaOpen = new Set()
+const plazaState = () => ({ open: [...plazaOpen] })
+
 const cleanText = (value, fallback, max) => String(value ?? '').trim().slice(0, max) || fallback
 const cleanNumber = (value) => (Number.isFinite(value) ? Math.max(-1000, Math.min(1000, value)) : 0)
 
@@ -54,7 +61,19 @@ function record(type, player, text) {
 }
 
 io.on('connection', (socket) => {
-  socket.on('join', ({ name, room, avatar, adminCode } = {}) => {
+  socket.on('join', ({ name, room, avatar, adminCode, recruited } = {}) => {
+    // Joining again = moving to another place: leave the room you were in first
+    const before = players.get(socket.id)
+    if (before) {
+      pickleball.leave(socket.id)
+      socket.leave(before.room)
+      socket.to(before.room).emit('playerLeft', socket.id)
+      if (before.voice) {
+        socket.to(before.room).emit('voice-left', socket.id)
+        before.voice = false
+        sendVoiceUsers(before.room)
+      }
+    }
     const player = {
       id: socket.id,
       name: cleanText(name, 'Player', 16),
@@ -76,9 +95,14 @@ io.on('connection', (socket) => {
     const others = [...players.values()].filter((p) => p.room === player.room && p.id !== socket.id)
     socket.emit('welcome', { id: socket.id, players: others, name: player.name, admin: !!player.admin })
     socket.emit('settings', settingsOf(player.room))
+    // Bring back what this player opened in the Plaza (if the server forgot), then tell them what's open
+    const added = (Array.isArray(recruited) ? recruited : []).filter((id) => PLAZA_IDS.includes(id) && !plazaOpen.has(id))
+    added.forEach((id) => plazaOpen.add(id))
+    if (added.length) io.emit('plaza', plazaState())
+    else socket.emit('plaza', plazaState())
     pickleball.greet(socket)
     socket.to(player.room).emit('playerJoined', player)
-    record('join', player)
+    if (!before) record('join', player)
   })
 
   socket.on('move', (m = {}) => {
@@ -147,6 +171,16 @@ io.on('connection', (socket) => {
     if (TIME_SETTINGS.includes(changes.time)) next.time = changes.time
     roomSettings.set(player.room, next)
     io.to(player.room).emit('settings', next)
+  })
+
+  // Someone recruited a person: their place opens in the Plaza for everyone
+  socket.on('recruit', (id) => {
+    const player = players.get(socket.id)
+    if (!player || !PLAZA_IDS.includes(id) || plazaOpen.has(id)) return
+    plazaOpen.add(id)
+    socket.emit('plaza', plazaState())
+    socket.broadcast.emit('plaza', { ...plazaState(), by: { id, player: player.name } })
+    console.log(`${player.name} opened "${id}" in the Plaza`)
   })
 
   // Admin asks for the record of visitors and chat (all rooms)

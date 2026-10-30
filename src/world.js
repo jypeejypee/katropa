@@ -44,6 +44,8 @@ export const playerState = { swingUntil: 0, teleport: null, jumpRequest: false, 
 export const touchInput = { x: 0, y: 0, active: false }
 export const npcPos = new THREE.Vector3(5.2, 0, -22) // same as NPC_HOME in dialogue.js
 export const npcState = { swingUntil: 0, facing: Math.PI, moving: false }
+// Whoever you're close to or talking to (Edson, Andrew, Aling Nena...): the player turns to face them
+export const talkTarget = new THREE.Vector3()
 
 // ---------- Pickleball court (painted on the road during a game) ----------
 export { COURT } from './court.js'

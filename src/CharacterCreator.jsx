@@ -32,7 +32,7 @@ export default function CharacterCreator() {
   const [adminCode, setAdminCode] = useState('') // never saved in the browser
   const isAdminName = name.trim().toLowerCase() === 'jaypee'
   const [room, setRoom] = useState(saved.room ?? 'tnlf')
-  const [map, setMap] = useState(MAPS[saved.map] ? saved.map : 'tnlf')
+  const [map, setMap] = useState(MAPS[saved.map] ? saved.map : 'plaza') // new players start in the Plaza (the story begins there)
   const [quality, setQuality] = useState(saved.quality ?? getGame().quality)
   const [avatar, setAvatar] = useState(saved.avatar ? sanitizeAvatar(saved.avatar) : DEFAULT_AVATAR)
   const [tab, setTab] = useState(0)

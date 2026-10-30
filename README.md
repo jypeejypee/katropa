@@ -3,7 +3,8 @@
 Tambay, laro at kwentuhan kasama ang tropa. A 3D street in Taytay you can walk around with friends:
 chat, voice, pickleball with Edson, and your own character. (From the maker of Kasama.)
 
-There are two places to hang out (pick one on the start screen under **Saan tayo?**):
+There are three places (pick one on the start screen under **Saan tayo?**, or later with **👥 Katropa → Pumunta sa**):
+- **Ang Plaza**: where the story starts (see *108 Katropa* below).
 - **Taytay (TNLF)**: the street at Taytay New Life Fellowship, with Edson and pickleball.
 - **Bridgetowne, Pasig**: you start between GBF Center (left) and Opus (right), then cross the bridge
   over the Pasig River with the rattan coils. After the bridge: The Victor on the right, the round towers being built on the left.
@@ -91,6 +92,24 @@ To play on a phone at home:
 - Check the phone uses `https://` and the right number at the end (`:4173` for `npm run lan`).
 - If a red error box appears at the bottom, screenshot it and send it to Claude.
 
+## 108 Katropa (the story)
+
+You're new in the city and alone. The old town plaza is empty: the fountain is dry, the stalls say SARADO,
+the lamps barely glow. **Lolo Ben**, the caretaker, tells you how to bring it back: find people in other places,
+win them over, and they open something in the Plaza. Like Suikoden's 108 Stars, there are three ways:
+
+- **Help them**: Aling Nena (Taytay, by the sari-sari store) lost her bayong of goods down the street. Find it and bring it back.
+- **Beat them**: Andrew (Bridgetowne skatepark) joins when you get 150 points in one skate run.
+- **Find them**: Kuya Jun sells kwek-kwek by the river before the bridge in Bridgetowne, **only at night**.
+
+Each one opens their place in the Plaza (a sari-sari store, a kwek-kwek cart, a skate corner); the lamps get brighter,
+and with three the fountain runs again. **The Plaza is shared by everyone online**: when anyone recruits Aling Nena,
+her store opens for all players. Your own katropa list (**👥 Katropa 0/108**) is saved in your browser.
+The server rebuilds the Plaza from the players who come back, so it's not lost when the server sleeps.
+
+To add a new recruit: add them to `RECRUITS` in `src/recruits.js` (and their lines), put them somewhere
+(`src/RecruitSpots.jsx`), give them a place in the Plaza (`STALLS` in `src/Plaza.jsx`), and add their id to `PLAZA_IDS` in `server/index.js`.
+
 ## Play together (multiplayer)
 
 You need **two terminals** in VS Code (click the **+** in the terminal panel for a second one):
@@ -166,6 +185,10 @@ everyone. Tap **Tapos na** to stop watching.
 | `src/bridgetowne.js` | **Bridgetowne layout: road and bridge sizes, palms, trees, street lights, traffic. Edit this!** |
 | `src/skate.js` | **What Andrew says, and how the skateboard feels (speed, ollie, points). Edit this!** |
 | `src/Skatepark.jsx` | The skatepark ramps, the skateboard, and Andrew |
+| `src/recruits.js` | **108 Katropa: who you can recruit, how, and what Lolo Ben, Aling Nena and Kuya Jun say. Edit this!** |
+| `src/Plaza.jsx` | Ang Plaza: the fountain, the chapel, the court, and the stalls that open when people join |
+| `src/RecruitSpots.jsx` | Where the recruits are before they join (Aling Nena and her bayong, Kuya Jun's cart) |
+| `src/Villager.jsx` | Someone standing in one place you can talk to |
 | `src/Bridgetowne.jsx` | Bridgetowne: the ground, river, bridge, road, sidewalks, railings, and puts everything in place |
 | `src/BridgetowneLandmarks.jsx` | The Victor, the rattan coils, Opus, GBF Center, the towers being built, palms, bollards |
 | `src/dialogue.js` | **Everything Edson says. Edit it to change the conversation!** |

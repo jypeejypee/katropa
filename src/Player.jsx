@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useKeyboardControls } from '@react-three/drei'
 import { RigidBody, CapsuleCollider, useRapier } from '@react-three/rapier'
 import * as THREE from 'three'
-import { playerPos, playerState, npcPos, now, lerpAngle, touchInput } from './world.js'
+import { playerPos, playerState, talkTarget, now, lerpAngle, touchInput } from './world.js'
 import { getGame, setGame, useGame } from './game.js'
 import { MAPS } from './maps.js'
 import { isTyping } from './network.js'
@@ -303,8 +303,8 @@ export default function Player() {
         const angle = Math.atan2(direction.x, direction.z)
         model.current.rotation.y = lerpAngle(model.current.rotation.y, angle, 1 - Math.exp(-12 * delta))
       } else if (mode === 'talk') {
-        // Look at Edson (or Andrew) while talking
-        const angle = Math.atan2(npcPos.x - playerPos.x, npcPos.z - playerPos.z)
+        // Look at whoever you're talking to
+        const angle = Math.atan2(talkTarget.x - playerPos.x, talkTarget.z - playerPos.z)
         model.current.rotation.y = lerpAngle(model.current.rotation.y, angle, 1 - Math.exp(-8 * delta))
       }
     }

@@ -40,6 +40,7 @@ function NearLamps({ heads, brightness }) {
 // They always exist (just at 0 brightness) so switching time of day doesn't stutter.
 // low (Smooth graphics): only the lamps near you light up (NearLamps). All lamp heads still glow.
 export default function NightLights({ brightness, low, map }) {
+  if (map === 'plaza') return null // the Plaza's open stalls light themselves (see Plaza.jsx)
   return map === 'bridgetowne'
     ? <BridgetowneLights brightness={brightness} low={low} />
     : <TaytayLights brightness={brightness} low={low} />

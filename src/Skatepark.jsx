@@ -3,7 +3,7 @@ import { useFrame, createPortal } from '@react-three/fiber'
 import { RigidBody, CapsuleCollider, ConvexHullCollider } from '@react-three/rapier'
 import * as THREE from 'three'
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js'
-import { playerPos, npcPos, lerpAngle } from './world.js'
+import { playerPos, talkTarget, lerpAngle } from './world.js'
 import { getGame, setGame, useGame } from './game.js'
 import { Person, animatePerson } from './Person.jsx'
 import { signTexture, concreteTexture } from './textures.js'
@@ -225,8 +225,6 @@ export function Andrew() {
     if (!body.current) return
     if (paddle.current) paddle.current.visible = false
     const [hx, , hz] = ANDREW_HOME
-    // The player looks at whoever they're talking to (npcPos); here that's Andrew
-    npcPos.set(hx, 0.1, hz)
     const dx = playerPos.x - hx
     const dz = playerPos.z - hz
     const dist = Math.hypot(dx, dz)
@@ -234,9 +232,11 @@ export function Andrew() {
     animatePerson(limbs, state.clock.elapsedTime, false, 3)
 
     const isNear = getGame().mode === 'walk' && dist < TALK_DISTANCE
+    if (isNear) talkTarget.set(hx, 0.1, hz)
     if (isNear !== near.current) {
       near.current = isNear
-      setGame({ nearNpc: isNear })
+      if (isNear) setGame({ nearNpc: 'andrew' })
+      else if (getGame().nearNpc === 'andrew') setGame({ nearNpc: false })
     }
   })
 
@@ -245,9 +245,9 @@ export function Andrew() {
       <CapsuleCollider args={[0.5, 0.4]} position={[0, 0.9, 0]} />
       <group ref={model} position={[0, 0.9, 0]} rotation={[0, -Math.PI / 2, 0]}
         onClick={(e) => {
-          if (e.delta > 10 || !getGame().nearNpc || getGame().mode !== 'walk') return
+          if (e.delta > 10 || getGame().nearNpc !== 'andrew' || getGame().mode !== 'walk') return
           e.stopPropagation()
-          setGame({ mode: 'talk', dialogue: 'start' })
+          setGame({ mode: 'talk', dialogue: 'start', talkingTo: 'andrew' })
         }}>
         <Person limbs={limbs} avatar={ANDREW_AVATAR} paddleRef={paddle} />
         {/* His board, carried in his left hand (he lends it to you when you skate) */}

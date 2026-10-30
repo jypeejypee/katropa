@@ -4,6 +4,12 @@
 //   moon: where the moon is in the night sky [x, y, z] (low, so you can see it without looking up)
 //   water: a river the moon shines on (its height, and from where to where along z)
 export const MAPS = {
+  plaza: {
+    label: 'Ang Plaza',
+    start: [0, 1.5, 24], // south side of the square, looking at the fountain and the old chapel
+    fog: 1.2,
+    moon: [-60, 50, -260], // low over the chapel
+  },
   tnlf: {
     label: 'Taytay (TNLF)',
     start: [-5.0, 1.5, -7], // left sidewalk, where photo 2 was taken; TNLF and Edson are just ahead
@@ -19,10 +25,12 @@ export const MAPS = {
   },
 }
 
-export const MAP_ORDER = ['tnlf', 'bridgetowne']
+export const MAP_ORDER = ['plaza', 'tnlf', 'bridgetowne']
 
 // Players on different maps never meet, so each map gets its own rooms on the server
-// (room "tropa" on Bridgetowne is "bt-tropa" on the server). The server cuts room names at 20 letters.
+// (room "tropa" on Bridgetowne is "bt-tropa" on the server, "pz-tropa" in the Plaza). The server cuts room names at 20 letters.
 export function serverRoom(map, room) {
-  return map === 'bridgetowne' ? `bt-${room.slice(0, 17)}` : room
+  if (map === 'bridgetowne') return `bt-${room.slice(0, 17)}`
+  if (map === 'plaza') return `pz-${room.slice(0, 17)}`
+  return room
 }

@@ -7,7 +7,9 @@
 //    action: 'skate' -> borrow Andrew's board and skate
 //    action: 'close' -> stop talking
 //  text can also be a function of the game, to say something about your score.
+//  Get 150 points in one run and he joins your katropa (see recruits.js).
 // ============================================================
+import { ANDREW_CHALLENGE } from './recruits.js'
 
 export const ANDREW_NAME = 'Andrew'
 export const ANDREW_HOME = [17, 0, -40] // at the corner of the skatepark, next to the sidewalk
@@ -49,12 +51,27 @@ export const andrewDialogue = {
     text: (game) => game.skateBest > 0
       ? `Uy, balik ka! ${game.skateBest} points yung best mo kanina, astig! Isa pa?`
       : 'Uy pre! Ako si Andrew. Dito ako lagi nag-i-skate, tabi ng ilog at ni Victor. Gusto mo subukan board ko?',
-    choices: [
+    choices: (game) => [
       { label: 'Sige, pahiram ng board!', action: 'skate' },
+      // He joins your katropa once you've shown him a good run
+      ...(game.recruited.includes('andrew') ? []
+        : game.skateBest >= ANDREW_CHALLENGE ? [{ label: 'O, nakita mo yun? Sama ka na sa plaza!', next: 'join' }]
+          : [{ label: 'Sama ka sa plaza namin?', next: 'challenge' }]),
       { label: 'Paano ba mag-skate?', next: 'howto' },
       { label: 'Sino yung higante dun?', next: 'victor' },
       { label: 'Mamaya na lang, pre.', next: 'bye' },
     ],
+  },
+  challenge: {
+    text: `Plaza? Hmm... Sige, ganito: pag naka-${ANDREW_CHALLENGE} points ka sa isang takbo, sasama ako. Deal? Kickflip ang malaki ang points, tapos lipad sa mga ramp!`,
+    choices: [
+      { label: 'Deal! Pahiram ng board!', action: 'skate' },
+      { label: 'Mamaya, mag-eensayo muna ako.', next: 'bye' },
+    ],
+  },
+  join: {
+    text: 'Grabe ka pre, astig yun! Sige, deal is deal. Magtatayo ako ng skate corner sa plaza, turuan natin mga bata doon!',
+    choices: [{ label: 'Tara na!', action: 'recruit:andrew' }],
   },
   howto: {
     text: (game) => game.touch

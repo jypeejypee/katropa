@@ -4,14 +4,24 @@ import { dialogue, NPC_NAME } from './dialogue.js'
 import { andrewDialogue, ANDREW_NAME } from './skate.js'
 import { playerState, touchInput, COURT } from './world.js'
 import { TIMES, TIME_ORDER, timeFromClock } from './timeOfDay.js'
-import { isTyping, sendChat, sendPb, adminSet, isOnline, toast, requestAdminLog } from './network.js'
+import { isTyping, sendChat, sendPb, adminSet, isOnline, toast, requestAdminLog, travelTo } from './network.js'
+import { RECRUITS, RECRUIT_ORDER, TOTAL_KATROPA, recruit, benDialogue, nenaDialogue, junDialogue } from './recruits.js'
+import { MAPS, MAP_ORDER } from './maps.js'
 import CharacterCreator from './CharacterCreator.jsx'
 import { startVoice, stopVoice, toggleMute } from './voice.js'
 
-// Who you talk to on each map: Edson in Taytay, Andrew at the Bridgetowne skatepark
-const talker = (map) => (map === 'bridgetowne'
-  ? { name: ANDREW_NAME, lines: andrewDialogue }
-  : { name: NPC_NAME, lines: dialogue })
+// Everyone you can talk to, by id (Villager.jsx, Npc.jsx and Skatepark.jsx say who's near)
+const TALKERS = {
+  edson: { name: NPC_NAME, lines: dialogue },
+  andrew: { name: ANDREW_NAME, lines: andrewDialogue },
+  ben: { name: 'Lolo Ben', lines: benDialogue },
+  nena: { name: 'Aling Nena', lines: nenaDialogue },
+  jun: { name: 'Kuya Jun', lines: junDialogue },
+}
+const talker = (game) => TALKERS[game.talkingTo ?? game.nearNpc] ?? TALKERS[game.map === 'bridgetowne' ? 'andrew' : 'edson']
+// A line's choices can depend on the game (like Andrew's challenge)
+const choicesOf = (line, game) => (typeof line.choices === 'function' ? line.choices(game) : line.choices)
+const startTalking = () => setGame({ mode: 'talk', dialogue: 'start', talkingTo: getGame().nearNpc })
 
 function choose(choice) {
   if (choice.action === 'play') setGame({ mode: 'pickleball', dialogue: null, score: [0, 0], message: '' })
@@ -29,13 +39,21 @@ function choose(choice) {
     else joinMatch()
   }
   else if (choice.action === 'close') setGame({ mode: 'walk', dialogue: null })
+  else if (choice.action?.startsWith('recruit:')) {
+    setGame({ mode: 'walk', dialogue: null })
+    recruit(choice.action.slice('recruit:'.length))
+  }
+  else if (choice.action === 'quest:nena') {
+    setGame({ mode: 'walk', dialogue: null, nenaQuest: 'looking' })
+    toast('Hanapin ang bayong ni Aling Nena sa dulo ng kalye, sa kabilang bangketa malapit sa KALIDAD.')
+  }
   else setGame({ dialogue: choice.next })
 }
 
 // Everything drawn on top of the 3D view
 export default function Hud() {
   const game = useGame()
-  const who = talker(game.map)
+  const who = talker(game)
   const line = game.mode === 'talk' ? who.lines[game.dialogue] : null
 
   // Automatic time of day: check the clock every minute
@@ -53,9 +71,9 @@ export default function Hud() {
       if (isTyping(e)) return
       const { mode, nearNpc, dialogue: node } = getGame()
       if (e.code === 'KeyM') toggleMute()
-      if (mode === 'walk' && nearNpc && e.code === 'KeyE') setGame({ mode: 'talk', dialogue: 'start' })
+      if (mode === 'walk' && nearNpc && e.code === 'KeyE') startTalking()
       if (mode !== 'talk') return
-      const choices = talker(getGame().map).lines[node].choices
+      const choices = choicesOf(talker(getGame()).lines[node], getGame())
       const number = Number(e.key)
       if (number >= 1 && number <= choices.length) choose(choices[number - 1])
       if (e.code === 'Escape') setGame({ mode: 'walk', dialogue: null })
@@ -81,7 +99,7 @@ export default function Hud() {
       {game.mode === 'walk' && game.nearNpc && (
         // onClick, not onPointerDown: the menu opens where the finger is, and the same tap would pick an answer
         <button className="prompt" tabIndex={-1} onMouseDown={(e) => e.preventDefault()}
-          onClick={() => setGame({ mode: 'talk', dialogue: 'start' })}>
+          onClick={startTalking}>
           {game.touch ? <>Tap to talk to {who.name}</> : <>Press <b>E</b> to talk to {who.name}</>}
         </button>
       )}
@@ -96,7 +114,7 @@ export default function Hud() {
           )}
           <div className="dialogue-text">{typeof line.text === 'function' ? line.text(game) : line.text}</div>
           <div className="dialogue-choices">
-            {line.choices.map((choice, i) => (
+            {choicesOf(line, game).map((choice, i) => (
               <button
                 key={i}
                 tabIndex={-1}
@@ -111,6 +129,7 @@ export default function Hud() {
       )}
 
       {game.mode !== 'start' && game.admin && <AdminPanel game={game} />}
+      {(game.mode === 'walk' || game.mode === 'skate') && <Katropa game={game} />}
       {game.toast && <Toast toast={game.toast} />}
       {game.pb && game.mode !== 'pickleball2' && game.mode !== 'start' &&
         (game.watching && game.pb.phase !== 'waiting' ? <WatchHud game={game} /> : <CourtBanner pb={game.pb} />)}
@@ -534,6 +553,45 @@ function VisitorLog({ log }) {
           </div>
         ))}
       </div>
+    </>
+  )
+}
+
+// Your katropa (who you've recruited, out of 108), what's open in the Plaza, and going to other places
+function Katropa({ game }) {
+  const keep = (e) => e.preventDefault()
+  const toggle = () => setGame({ katropaOpen: !game.katropaOpen })
+  return (
+    <>
+      <button className="katropa-button" tabIndex={-1} onMouseDown={keep} onClick={toggle}>
+        👥 Katropa {game.recruited.length}/{TOTAL_KATROPA}
+      </button>
+      {game.katropaOpen && (
+        <div className="katropa-panel">
+          <div className="katropa-title">Ang katropa mo</div>
+          {RECRUIT_ORDER.map((id) => {
+            const r = RECRUITS[id]
+            const got = game.recruited.includes(id)
+            return (
+              <div key={id} className={got ? 'katropa-row got' : 'katropa-row'}>
+                <b>{got ? r.name : '???'}</b>
+                <span>{got ? `${r.role} · ${r.stall}` : `${r.where} · ${{ help: 'Tulungan', beat: 'Talunin', hidden: 'Hanapin' }[r.how]}`}</span>
+              </div>
+            )
+          })}
+          <div className="katropa-row more"><span>...at {TOTAL_KATROPA - RECRUIT_ORDER.length} pa, sa mga bagong lugar na darating</span></div>
+          <div className="katropa-title">Plaza: {game.plaza.length} bukas (para sa lahat)</div>
+          <div className="katropa-title">Pumunta sa</div>
+          <div className="katropa-travel">
+            {MAP_ORDER.map((m) => (
+              <button key={m} tabIndex={-1} onMouseDown={keep} disabled={m === game.map}
+                onClick={() => { setGame({ katropaOpen: false }); travelTo(m) }}>
+                {MAPS[m].label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   )
 }
