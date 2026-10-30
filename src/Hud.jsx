@@ -69,6 +69,7 @@ export default function Hud() {
       )}
 
       {game.mode === 'walk' && game.nearNpc && (
+        // onClick, not onPointerDown: the menu opens where the finger is, and the same tap would pick an answer
         <button className="prompt" tabIndex={-1} onMouseDown={(e) => e.preventDefault()}
           onClick={() => setGame({ mode: 'talk', dialogue: 'start' })}>
           {game.touch ? <>Tap to talk to {NPC_NAME}</> : <>Press <b>E</b> to talk to {NPC_NAME}</>}

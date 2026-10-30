@@ -14,7 +14,7 @@ const WALK_SPEED = 2.2
 const SWING_TIME = 0.35
 const toHome = new THREE.Vector3()
 
-// Edson: a neighbor you can talk to (press E) and play pickleball with
+// Edson: a neighbor you can talk to (press E, or tap him) and play pickleball with
 export default function Npc() {
   const body = useRef()
   const model = useRef()
@@ -63,7 +63,13 @@ export default function Npc() {
   return (
     <RigidBody ref={body} type="kinematicPosition" colliders={false} position={NPC_HOME}>
       <CapsuleCollider args={[0.5, 0.4]} position={[0, 0.9, 0]} />
-      <group ref={model} position={[0, 0.9, 0]} rotation={[0, Math.PI, 0]}>
+      {/* Tap or click Edson when close to talk (a drag to look around doesn't count) */}
+      <group ref={model} position={[0, 0.9, 0]} rotation={[0, Math.PI, 0]}
+        onClick={(e) => {
+          if (e.delta > 10 || !getGame().nearNpc || getGame().mode !== 'walk') return
+          e.stopPropagation()
+          setGame({ mode: 'talk', dialogue: 'start' })
+        }}>
         <Person limbs={limbs} avatar={EDSON_AVATAR} />
       </group>
       {/* Name above the head */}

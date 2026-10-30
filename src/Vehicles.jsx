@@ -183,6 +183,13 @@ function MovingVehicle({ index, cars, states }) {
     // (also when other players in the room are playing on the court)
     const { mode, pb } = getGame()
     if (mode === 'pickleball' || mode === 'pickleball2' || (pb && pb.phase !== 'waiting')) {
+      // Already on the court when the game starts: move just past it, so it doesn't park on the court
+      const clear = COURT.halfLength + 1.5 + half[2]
+      if (Math.abs(me.z - COURT.z) < clear) {
+        me.z = COURT.z + dir * (clear + 0.5)
+        body.current.setTranslation({ x, y: 0, z: me.z }, true)
+        return
+      }
       const courtEdge = COURT.z - dir * (COURT.halfLength + 1.5)
       const toCourt = (courtEdge - me.z) * dir
       if (toCourt > 0 && toCourt < half[2] + 2) target = 0

@@ -40,7 +40,16 @@ html, body, #root {
   color: white;
   border-radius: 999px;
   font-size: 16px;
-  pointer-events: none;
+  touch-action: none;
+}
+
+.touch .prompt {
+  bottom: 190px;
+  padding: 14px 24px;
+  font-size: 18px;
+  font-weight: 700;
+  background: rgba(255, 210, 63, 0.95);
+  color: #222;
 }
 
 .prompt b {
