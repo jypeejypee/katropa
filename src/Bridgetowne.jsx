@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import StaticBatch from './StaticBatch.jsx'
+import { Skatepark } from './Skatepark.jsx'
 import { Tree } from './Props.jsx'
 import { Traffic } from './Vehicles.jsx'
 import { asphaltTexture, concreteTexture, dashTexture, deckTexture, riverTexture } from './textures.js'
@@ -212,6 +213,7 @@ export default memo(function Bridgetowne() {
         <Opus />
         <GbfCenter />
         <Towers />
+        <Skatepark />
 
         {lamps.map((z) => <DoubleLamp key={z} z={z} />)}
         {bollards.map((z) => [-1, 1].map((s) => <Bollard key={`${s}${z}`} x={s * (CAR_EDGE + 0.15)} z={z} />))}

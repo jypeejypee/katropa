@@ -17,6 +17,8 @@ let state = {
   nearNpc: false,
   dialogue: null, // which line of dialogue.js is showing
   score: [0, 0], // [you, Edson]
+  skateScore: 0, // skateboard points this time (see skate.js)
+  skateBest: 0, // best skateboard points so far
   message: '',
   time: timeFromClock(), // 'noon', 'afternoon' or 'night' (see timeOfDay.js)
   timeSetting: 'auto', // 'auto' follows the real clock; only the admin can change it (for the whole room)

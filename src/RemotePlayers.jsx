@@ -8,6 +8,7 @@ import { lerpAngle, playerPos } from './world.js'
 import { setPeerVolume } from './voice.js'
 import { signTexture } from './textures.js'
 import SpeechBubble from './SpeechBubble.jsx'
+import { Skateboard } from './Skatepark.jsx'
 
 const target = new THREE.Vector3()
 
@@ -31,6 +32,7 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
   const tilt = useRef()
   const limbs = useRef({ legs: [], arms: [] })
   const paddle = useRef()
+  const board = useRef()
 
   useFrame((state, delta) => {
     const p = remotePlayers.get(id)
@@ -50,6 +52,10 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
     const own = avatar?.model && avatar.model !== 'custom'
     tilt.current.rotation.x = own ? 0 : t.dive * 1.45
     tilt.current.position.y = (own ? 0 : -t.dive * 0.62) - SIT_DROP * t.sit
+    // On a skateboard: standing sideways on the board
+    board.current.visible = !!t.skate
+    tilt.current.rotation.y = t.skate ? Math.PI / 2 : 0
+    if (t.skate) tilt.current.position.y = 0.12
     // Holding a paddle and swinging it while playing pickleball
     const playing = !!pbNet.state?.players.some((pl) => pl.id === id)
     if (paddle.current) paddle.current.visible = playing
@@ -64,6 +70,9 @@ function RemotePlayer({ id, name, avatar, bubble, inVoice }) {
       <group ref={model}>
         <group ref={tilt}>
           <Person limbs={limbs} avatar={avatar} paddleRef={paddle} />
+        </group>
+        <group ref={board} position={[0, -0.9, 0]} visible={false}>
+          <Skateboard deck="#2a9d8f" />
         </group>
       </group>
       <SpeechBubble bubble={bubble} />

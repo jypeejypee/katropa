@@ -80,9 +80,10 @@ io.on('connection', (socket) => {
     player.moving = !!m.moving
     player.sit = Math.max(0, Math.min(1, cleanNumber(m.sit)))
     player.dive = Math.max(0, Math.min(1, cleanNumber(m.dive)))
-    const { id, x, y, z, rotY, moving, sit, dive } = player
+    player.skate = m.skate ? 1 : 0 // riding a skateboard
+    const { id, x, y, z, rotY, moving, sit, dive, skate } = player
     // volatile: if the network is slow, it's fine to skip an old position
-    socket.to(player.room).volatile.emit('playerMoved', { id, x, y, z, rotY, moving, sit, dive })
+    socket.to(player.room).volatile.emit('playerMoved', { id, x, y, z, rotY, moving, sit, dive, skate })
   })
 
   // Chat: send the message to everyone in the same room (including the sender)

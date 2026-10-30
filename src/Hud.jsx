@@ -1,14 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGame, getGame, setGame } from './game.js'
 import { dialogue, NPC_NAME } from './dialogue.js'
+import { andrewDialogue, ANDREW_NAME } from './skate.js'
 import { playerState, touchInput, COURT } from './world.js'
 import { TIMES, TIME_ORDER, timeFromClock } from './timeOfDay.js'
 import { isTyping, sendChat, sendPb, adminSet, isOnline, toast } from './network.js'
 import CharacterCreator from './CharacterCreator.jsx'
 import { startVoice, stopVoice, toggleMute } from './voice.js'
 
+// Who you talk to on each map: Edson in Taytay, Andrew at the Bridgetowne skatepark
+const talker = (map) => (map === 'bridgetowne'
+  ? { name: ANDREW_NAME, lines: andrewDialogue }
+  : { name: NPC_NAME, lines: dialogue })
+
 function choose(choice) {
   if (choice.action === 'play') setGame({ mode: 'pickleball', dialogue: null, score: [0, 0], message: '' })
+  else if (choice.action === 'skate') setGame({ mode: 'skate', dialogue: null, skateScore: 0, message: '' })
   else if (choice.action === 'play2') {
     // Pickleball with a real player: the server opens a game or joins the one that's waiting
     if (!isOnline()) {
@@ -28,7 +35,8 @@ function choose(choice) {
 // Everything drawn on top of the 3D view
 export default function Hud() {
   const game = useGame()
-  const line = game.mode === 'talk' ? dialogue[game.dialogue] : null
+  const who = talker(game.map)
+  const line = game.mode === 'talk' ? who.lines[game.dialogue] : null
 
   // Automatic time of day: check the clock every minute
   useEffect(() => {
@@ -47,7 +55,7 @@ export default function Hud() {
       if (e.code === 'KeyM') toggleMute()
       if (mode === 'walk' && nearNpc && e.code === 'KeyE') setGame({ mode: 'talk', dialogue: 'start' })
       if (mode !== 'talk') return
-      const choices = dialogue[node].choices
+      const choices = talker(getGame().map).lines[node].choices
       const number = Number(e.key)
       if (number >= 1 && number <= choices.length) choose(choices[number - 1])
       if (e.code === 'Escape') setGame({ mode: 'walk', dialogue: null })
@@ -74,19 +82,19 @@ export default function Hud() {
         // onClick, not onPointerDown: the menu opens where the finger is, and the same tap would pick an answer
         <button className="prompt" tabIndex={-1} onMouseDown={(e) => e.preventDefault()}
           onClick={() => setGame({ mode: 'talk', dialogue: 'start' })}>
-          {game.touch ? <>Tap to talk to {NPC_NAME}</> : <>Press <b>E</b> to talk to {NPC_NAME}</>}
+          {game.touch ? <>Tap to talk to {who.name}</> : <>Press <b>E</b> to talk to {who.name}</>}
         </button>
       )}
 
       {line && (
         <div className="dialogue">
-          <div className="dialogue-name">{NPC_NAME}</div>
+          <div className="dialogue-name">{who.name}</div>
           {(game.dialogue === 'won' || game.dialogue === 'lost') && (
             <div className="dialogue-score">
               Final score: Ikaw {game.score[0]} – {game.score[1]} {NPC_NAME}
             </div>
           )}
-          <div className="dialogue-text">{line.text}</div>
+          <div className="dialogue-text">{typeof line.text === 'function' ? line.text(game) : line.text}</div>
           <div className="dialogue-choices">
             {line.choices.map((choice, i) => (
               <button
@@ -110,10 +118,10 @@ export default function Hud() {
       {game.mode !== 'talk' && game.mode !== 'start' && (
         <div className="action-buttons">
           <button tabIndex={-1} onPointerDown={(e) => { e.preventDefault(); playerState.jumpRequest = true }}>
-            JUMP<small>J</small>
+            {game.mode === 'skate' ? 'OLLIE' : 'JUMP'}<small>{game.mode === 'skate' ? 'Space' : 'J'}</small>
           </button>
           <button tabIndex={-1} onPointerDown={(e) => { e.preventDefault(); playerState.diveRequest = true }}>
-            DIVE<small>K</small>
+            {game.mode === 'skate' ? 'FLIP' : 'DIVE'}<small>K</small>
           </button>
           {game.mode === 'walk' && (
             <button tabIndex={-1} onPointerDown={(e) => { e.preventDefault(); playerState.sitRequest = true }}>
@@ -140,6 +148,9 @@ export default function Hud() {
           {game.mode === 'pickleball2' && (
             <button tabIndex={-1} onPointerDown={(e) => { e.preventDefault(); leaveMatch() }}>Stop</button>
           )}
+          {game.mode === 'skate' && (
+            <button tabIndex={-1} onPointerDown={(e) => { e.preventDefault(); stopSkating() }}>Stop</button>
+          )}
         </div>
       )}
 
@@ -160,6 +171,47 @@ export default function Hud() {
       )}
 
       {game.mode === 'pickleball2' && <MatchHud game={game} />}
+      {game.mode === 'skate' && <SkateHud game={game} />}
+    </>
+  )
+}
+
+// Give Andrew's board back
+function stopSkating() {
+  const { skateScore } = getGame()
+  setGame({ mode: 'walk', message: '' })
+  toast(`Naibalik mo na ang board kay ${ANDREW_NAME}.${skateScore ? ` ${skateScore} points! 🛹` : ''}`)
+}
+
+// Skateboard points, the last trick ("Kickflip! +50"), and the keys
+function SkateHud({ game }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!isTyping(e) && e.code === 'KeyQ') stopSkating()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  // The trick message goes away after a moment
+  useEffect(() => {
+    if (!game.message) return
+    const timer = setTimeout(() => setGame({ message: '' }), 1800)
+    return () => clearTimeout(timer)
+  }, [game.message])
+  return (
+    <>
+      <div className="scoreboard">
+        <span>🛹 Points</span>
+        <b>{game.skateScore}</b>
+        <span className="dash">·</span>
+        <span>Best {game.skateBest}</span>
+      </div>
+      {game.message && <div className="game-message">{game.message}</div>}
+      {!game.touch && (
+        <div className="help">
+          W push · A / D turn · Shift faster · SPACE ollie · K kickflip · Ride the ramps to fly · Q to give the board back
+        </div>
+      )}
     </>
   )
 }

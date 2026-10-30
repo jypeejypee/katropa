@@ -30,7 +30,7 @@ function addPlayer(p) {
     name: p.name,
     avatar: p.avatar,
     pos: new THREE.Vector3(p.x, p.y, p.z),
-    target: { x: p.x, y: p.y, z: p.z, rotY: p.rotY, moving: p.moving, sit: p.sit, dive: p.dive },
+    target: { x: p.x, y: p.y, z: p.z, rotY: p.rotY, moving: p.moving, sit: p.sit, dive: p.dive, skate: p.skate },
   })
 }
 
@@ -114,6 +114,7 @@ export function connect({ name, room, map, avatar, adminCode }) {
       moving: playerState.moving,
       sit: playerState.sit,
       dive: playerState.dive,
+      skate: playerState.skate,
     })
   }, SEND_EVERY * 1000)
 }

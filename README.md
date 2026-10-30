@@ -54,6 +54,16 @@ Say *"Sige, laro tayo!"* and a court with a net appears on the road in front of 
 - The ball must cross the net and land inside the lines. First to 11, win by 2.
 - **Q** = stop playing
 
+### Skateboarding with Andrew (Bridgetowne)
+
+After the bridge, on the right between The Victor and the river, there's a skatepark. **Andrew** stands at the corner.
+Press **E** (or tap him) and say *"Sige, pahiram ng board!"* to borrow his skateboard.
+- **W** = push, **A** / **D** = turn, hold **Shift** = faster (the board keeps rolling when you let go)
+- **Space** = ollie, **K** = kickflip (from the ground it pops an ollie too). Land after the board finishes turning, or it's *Sablay!*
+- Ride up the kicker, the funbox and the big bank to fly. Points: ollie 10, kickflip 50, big air 25
+- **Q** = give the board back
+- Phone: joystick to push and turn, **OLLIE** / **FLIP** buttons, **Stop** to give the board back
+
 To stop the game: click the terminal and press `Ctrl + C`.
 
 ## Playing on a phone
@@ -142,6 +152,8 @@ everyone. Tap **Tapos na** to stop watching.
 | `src/houses.js` | **The whole street layout: buildings, trees, posts, signs, parked cars, traffic. Edit this!** |
 | `src/maps.js` | The places you can pick (Taytay, Bridgetowne): where you start, how far you can see |
 | `src/bridgetowne.js` | **Bridgetowne layout: road and bridge sizes, palms, trees, street lights, traffic. Edit this!** |
+| `src/skate.js` | **What Andrew says, and how the skateboard feels (speed, ollie, points). Edit this!** |
+| `src/Skatepark.jsx` | The skatepark ramps, the skateboard, and Andrew |
 | `src/Bridgetowne.jsx` | Bridgetowne: the ground, river, bridge, road, sidewalks, railings, and puts everything in place |
 | `src/BridgetowneLandmarks.jsx` | The Victor, the rattan coils, Opus, GBF Center, the towers being built, palms, bollards |
 | `src/dialogue.js` | **Everything Edson says. Edit it to change the conversation!** |

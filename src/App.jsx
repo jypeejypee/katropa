@@ -4,6 +4,7 @@ import { KeyboardControls } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
 import Street from './Street.jsx'
 import Bridgetowne from './Bridgetowne.jsx'
+import { Andrew } from './Skatepark.jsx'
 import Player from './Player.jsx'
 import Npc from './Npc.jsx'
 import Pickleball from './Pickleball.jsx'
@@ -61,7 +62,7 @@ export default function App() {
     document.body.classList.toggle('touch', touch)
   }, [touch])
   const time = TIMES[timeName]
-  const taytay = map === 'tnlf' // Edson and pickleball are only in Taytay
+  const taytay = map === 'tnlf' // Edson and pickleball are only in Taytay; Andrew and the skatepark are in Bridgetowne
   return (
     <>
       <KeyboardControls map={keyMap}>
@@ -83,7 +84,7 @@ export default function App() {
           <Physics gravity={[0, -9.81, 0]}>
             {taytay ? <Street /> : <Bridgetowne />}
             <Player />
-            {taytay && <Npc />}
+            {taytay ? <Npc /> : <Andrew />}
             {taytay && mode === 'pickleball' && <Pickleball />}
             {taytay && mode === 'pickleball2' && <Pickleball2P />}
             {/* Watching other players' game */}

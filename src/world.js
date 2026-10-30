@@ -36,8 +36,8 @@ export function lerpAngle(a, b, t) {
 // ---------- People ----------
 // Things the player and Edson share with the pickleball game
 export const playerState = { swingUntil: 0, teleport: null, jumpRequest: false, diveRequest: false, sitRequest: false, diving: false,
-  // sent to the other players in multiplayer:
-  facing: Math.PI, moving: false, sit: 0, dive: 0,
+  // sent to the other players in multiplayer (skate: 1 while on a skateboard):
+  facing: Math.PI, moving: false, sit: 0, dive: 0, skate: 0,
   hitRequest: false, viewRequest: false }
 
 // The on-screen joystick for phones: x = left/right, y = forward/back (-1 to 1)

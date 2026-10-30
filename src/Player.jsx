@@ -4,11 +4,13 @@ import { useKeyboardControls } from '@react-three/drei'
 import { RigidBody, CapsuleCollider, useRapier } from '@react-three/rapier'
 import * as THREE from 'three'
 import { playerPos, playerState, npcPos, now, lerpAngle, touchInput } from './world.js'
-import { getGame, useGame } from './game.js'
+import { getGame, setGame, useGame } from './game.js'
 import { MAPS } from './maps.js'
 import { isTyping } from './network.js'
 import { Person, animatePerson, SIT_DROP } from './Person.jsx'
 import SpeechBubble from './SpeechBubble.jsx'
+import { Skateboard } from './Skatepark.jsx'
+import { SKATE, POINTS } from './skate.js'
 
 const WALK_SPEED = 3
 const RUN_SPEED = 7
@@ -35,6 +37,9 @@ export default function Player() {
   const limbs = useRef({ legs: [], arms: [] })
   const dive = useRef({ start: -10, dir: new THREE.Vector3() })
   const sit = useRef({ on: false, amount: 0 }) // amount: 0 = standing, 1 = sitting
+  // Skateboard: which way it rolls, when you left the ground, and the trick you're doing
+  const board = useRef()
+  const skate = useRef({ heading: 0, air: false, airStart: 0, ollie: false, flip: false, flipStart: -10 })
   const [, getKeys] = useKeyboardControls()
   const { gl } = useThree()
   const { world, rapier } = useRapier()
@@ -76,8 +81,9 @@ export default function Player() {
     }
     const onKey = (e) => {
       if (isTyping(e)) return
-      // J = jump, K = dive. Space also jumps while walking (in pickleball Space is for hitting)
-      if (e.code === 'KeyJ' || (e.code === 'Space' && getGame().mode === 'walk')) {
+      // J = jump, K = dive (a kickflip on the skateboard).
+      // Space also jumps while walking or skating (in pickleball Space is for hitting)
+      if (e.code === 'KeyJ' || (e.code === 'Space' && (getGame().mode === 'walk' || getGame().mode === 'skate'))) {
         e.preventDefault()
         playerState.jumpRequest = true
       }
@@ -160,17 +166,32 @@ export default function Player() {
     if (s.on && (moving || mode !== 'walk' || playerState.jumpRequest || playerState.diveRequest)) s.on = false
     s.amount = THREE.MathUtils.damp(s.amount, s.on ? 1 : 0, 8, delta)
 
-    // Jump
+    // Jump (on the skateboard it's an ollie)
+    const skating = mode === 'skate'
+    const sk = skate.current
     const d = dive.current
     if (playerState.jumpRequest) {
       playerState.jumpRequest = false
-      if (grounded && !frozen && t - d.start > DIVE_TOTAL) upSpeed = JUMP_SPEED
+      if (grounded && !frozen && t - d.start > DIVE_TOTAL) {
+        upSpeed = skating ? SKATE.ollie : JUMP_SPEED
+        if (skating) sk.ollie = true
+      }
     }
 
-    // Dive: throw yourself forward (in pickleball it also reaches far for the ball)
+    // Dive: throw yourself forward (in pickleball it also reaches far for the ball).
+    // On the skateboard it's a kickflip instead (from the ground it pops an ollie first).
     if (playerState.diveRequest) {
       playerState.diveRequest = false
-      if (grounded && !frozen && t - d.start > DIVE_TOTAL) {
+      if (skating) {
+        if (t - sk.flipStart > SKATE.flipTime) {
+          if (grounded) {
+            upSpeed = SKATE.ollie
+            sk.ollie = true
+          }
+          sk.flipStart = t
+          sk.flip = true
+        }
+      } else if (grounded && !frozen && t - d.start > DIVE_TOTAL) {
         d.start = t
         const facing = model.current.rotation.y
         if (moving) d.dir.copy(direction)
@@ -183,7 +204,69 @@ export default function Player() {
     const diving = diveTime < DIVE_TOTAL
     playerState.diving = diveTime < DIVE_FLY + 0.15
 
-    if (diving) {
+    let pushing = false // kicking the ground to go faster on the skateboard
+    if (skating) {
+      // 2b. Riding the skateboard: it keeps rolling, and turns a little at a time.
+      // Start from how fast the body really moved (ramps and walls slow you down).
+      let rolling = Math.hypot(velocity.x, velocity.z)
+      if (rolling > 0.3) sk.heading = Math.atan2(velocity.x, velocity.z)
+      const top = run ? SKATE.fast : SKATE.push
+      if (grounded) {
+        if (moving) {
+          const want = Math.atan2(direction.x, direction.z)
+          const turn = lerpAngle(sk.heading, want, 1) - sk.heading
+          if (rolling < 0.5) sk.heading = want
+          else sk.heading += THREE.MathUtils.clamp(turn, -SKATE.turn * delta, SKATE.turn * delta)
+          if (Math.abs(turn) > 2.3) rolling = Math.max(0, rolling - 8 * delta) // pulling back = brake
+          else if (rolling < top) {
+            rolling = Math.min(top, rolling + SKATE.accel * delta)
+            pushing = true
+          }
+        } else rolling *= Math.exp(-SKATE.coast * delta)
+      }
+
+      // Tricks: spin the board for a kickflip, and score when you land
+      const flip = (t - sk.flipStart) / SKATE.flipTime
+      board.current.rotation.z = flip < 1 ? flip * Math.PI * 2 : 0
+      board.current.position.y = -0.82 + (flip < 1 ? Math.sin(flip * Math.PI) * 0.25 : 0)
+      if (!grounded && !sk.air) {
+        sk.air = true
+        sk.airStart = t
+      } else if (grounded && sk.air) {
+        sk.air = false
+        const airTime = t - sk.airStart
+        const tricks = []
+        let points = 0
+        if (flip < 1) {
+          rolling = 0 // landed before the board finished turning
+          setGame({ message: 'Sablay! 😵' })
+        } else if (airTime > 0.25) {
+          if (sk.flip) {
+            tricks.push('Kickflip')
+            points += POINTS.kickflip
+          } else if (sk.ollie) {
+            tricks.push('Ollie')
+            points += POINTS.ollie
+          }
+          if (airTime > 0.9) {
+            tricks.push('Big air')
+            points += POINTS.air
+          }
+        }
+        if (points) {
+          const score = getGame().skateScore + points
+          setGame({ skateScore: score, skateBest: Math.max(score, getGame().skateBest), message: `${tricks.join(' + ')}! +${points}` })
+        }
+        sk.ollie = false
+        sk.flip = false
+      }
+
+      direction.set(Math.sin(sk.heading) * rolling, 0, Math.cos(sk.heading) * rolling)
+      model.current.rotation.y = lerpAngle(model.current.rotation.y, sk.heading, 1 - Math.exp(-14 * delta))
+      // Stand sideways on the board
+      tilt.current.rotation.set(0, Math.PI / 2, 0)
+      tilt.current.position.y = 0.12
+    } else if (diving) {
       // Fly forward, slide a little, then lie there before getting up
       const slide = diveTime < DIVE_FLY ? 1 : Math.max(0, 1 - (diveTime - DIVE_FLY) / 0.35) * 0.35
       direction.copy(d.dir).multiplyScalar(DIVE_SPEED * slide)
@@ -192,10 +275,10 @@ export default function Player() {
       const lean = diveTime < DIVE_FLY ? diveTime / DIVE_FLY : diveTime < getUp ? 1 : (DIVE_TOTAL - diveTime) / 0.4
       // 3D model characters have their own dive-roll animation, so don't tip them over too
       const own = getGame().avatar.model !== 'custom'
-      tilt.current.rotation.x = own ? 0 : lean * 1.45
+      tilt.current.rotation.set(own ? 0 : lean * 1.45, 0, 0)
       tilt.current.position.y = own ? 0 : -lean * 0.62
     } else {
-      tilt.current.rotation.x = 0
+      tilt.current.rotation.set(0, 0, 0)
       tilt.current.position.y = -SIT_DROP * s.amount // lower the body to the ground when sitting
       if (moving) {
         direction.multiplyScalar(speed)
@@ -203,7 +286,7 @@ export default function Player() {
         const angle = Math.atan2(direction.x, direction.z)
         model.current.rotation.y = lerpAngle(model.current.rotation.y, angle, 1 - Math.exp(-12 * delta))
       } else if (mode === 'talk') {
-        // Look at Edson while talking
+        // Look at Edson (or Andrew) while talking
         const angle = Math.atan2(npcPos.x - playerPos.x, npcPos.z - playerPos.z)
         model.current.rotation.y = lerpAngle(model.current.rotation.y, angle, 1 - Math.exp(-8 * delta))
       }
@@ -214,7 +297,9 @@ export default function Player() {
     playerPos.set(pos.x, pos.y, pos.z)
     // What the other players see
     playerState.facing = model.current.rotation.y
-    playerState.moving = moving && !diving && grounded
+    playerState.moving = skating ? pushing && grounded : moving && !diving && grounded
+    playerState.skate = skating ? 1 : 0
+    board.current.visible = skating
     playerState.sit = s.amount
     playerState.dive = diving ? -tilt.current.position.y / 0.62 : 0
 
@@ -222,7 +307,7 @@ export default function Player() {
     const swing = t < playerState.swingUntil ? 1 - (playerState.swingUntil - t) / SWING_TIME : -1
     if (paddle.current) paddle.current.visible = mode === 'pickleball' || mode === 'pickleball2'
     // Knees and elbows bend; sitting is mahinhin for Babae characters
-    animatePerson(limbs, state.clock.elapsedTime, moving && !diving && grounded, speed, swing, s.amount,
+    animatePerson(limbs, state.clock.elapsedTime, playerState.moving, skating ? WALK_SPEED : speed, swing, s.amount,
       getGame().avatar.gender === 'female')
     limbs.current.motion.air = !grounded && !diving
     limbs.current.motion.dive = diving
@@ -266,6 +351,12 @@ export default function Player() {
         {/* tilt: leans the body forward when diving */}
         <group ref={tilt}>
           <Person limbs={limbs} paddleRef={paddle} avatar={avatar} />
+        </group>
+        {/* Andrew's skateboard, under your feet while skating (it turns around its middle for a kickflip) */}
+        <group ref={board} position={[0, -0.82, 0]} visible={false}>
+          <group position={[0, -0.08, 0]}>
+            <Skateboard deck="#2a9d8f" />
+          </group>
         </group>
       </group>
     </RigidBody>
