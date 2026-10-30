@@ -12,7 +12,7 @@ import Pickleball2P from './Pickleball2P.jsx'
 import Hud from './Hud.jsx'
 import RemotePlayers from './RemotePlayers.jsx'
 import NightLights from './NightLights.jsx'
-import { SkyAndClouds } from './Props.jsx'
+import { SkyAndClouds, MoonPath } from './Props.jsx'
 import { TIMES } from './timeOfDay.js'
 import { MAPS } from './maps.js'
 import { playerPos } from './world.js'
@@ -76,6 +76,7 @@ export default function App() {
         >
           <fog attach="fog" args={[time.fog, time.fogNear * MAPS[map].fog, time.fogFar * MAPS[map].fog]} />
           <SkyAndClouds time={time} low={low} moon={MAPS[map].moon} />
+          {MAPS[map].water && <MoonPath moon={MAPS[map].moon} water={MAPS[map].water} on={time.stars} />}
           {/* Smooth mode has no lamp lights, so nights get a bit more soft light instead */}
           <hemisphereLight color={time.hemiSky} groundColor={time.hemiGround}
             intensity={time.hemi * (low && time.lamps ? 1.8 : 1)} />

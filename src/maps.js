@@ -2,6 +2,7 @@
 //   start: where the player appears [x, y, z] (looking toward -z)
 //   fog: how much farther you can see than on the normal street (Bridgetowne has tall buildings far away)
 //   moon: where the moon is in the night sky [x, y, z] (low, so you can see it without looking up)
+//   water: a river the moon shines on (its height, and from where to where along z)
 export const MAPS = {
   tnlf: {
     label: 'Taytay (TNLF)',
@@ -13,7 +14,8 @@ export const MAPS = {
     label: 'Bridgetowne, Pasig',
     start: [-10.6, 1.5, 53], // GBF Center corner, at the crossing before the bridge, looking toward The Victor
     fog: 1.6,
-    moon: [272, 52, -45], // over the river, behind the big coil arch on the right side of the bridge
+    moon: [-272, 52, 8], // over the river on the left (west) side of the bridge
+    water: { y: -2.6, z: [-28, 28] }, // the Pasig River (the moon shines on it at night)
   },
 }
 

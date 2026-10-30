@@ -356,6 +356,60 @@ export function Bucket({ position }) {
   )
 }
 
+// The moon shining on the river: a path of little glints on the water, from you toward the moon
+const MOON_PATH = { start: 10, length: 170, width: 12 }
+export function MoonPath({ moon, water, on }) {
+  const group = useRef()
+  const dir = useMemo(() => new THREE.Vector2(moon[0], moon[2]).normalize(), [moon])
+  useFrame(({ camera }) => {
+    const g = group.current
+    g.visible = on
+    if (!on) return
+    const ahead = MOON_PATH.start + MOON_PATH.length / 2
+    const [z0, z1] = water.z
+    // follow you, but always stay on the water
+    g.position.set(
+      camera.position.x + dir.x * ahead,
+      water.y + 0.02,
+      THREE.MathUtils.clamp(camera.position.z + dir.y * ahead, z0 + MOON_PATH.width / 2, z1 - MOON_PATH.width / 2),
+    )
+  })
+  return (
+    <group ref={group} rotation={[0, Math.atan2(dir.x, dir.y), 0]} visible={false}>
+      <mesh rotation={[Math.PI / 2, 0, 0]} renderOrder={1}>
+        <planeGeometry args={[MOON_PATH.width, MOON_PATH.length]} />
+        <meshBasicMaterial map={moonPathTexture()} transparent blending={THREE.AdditiveBlending}
+          depthWrite={false} side={THREE.DoubleSide} fog={false} toneMapped={false} />
+      </mesh>
+    </group>
+  )
+}
+
+// Glints on the water: short bright lines, most in the middle, fading near you and far away
+let pathTexture = null
+function moonPathTexture() {
+  if (pathTexture) return pathTexture
+  const canvas = document.createElement('canvas')
+  canvas.width = 128
+  canvas.height = 1024
+  const ctx = canvas.getContext('2d')
+  const random = rng(17)
+  for (let i = 0; i < 2600; i++) {
+    const y = random() * canvas.height
+    const far = 1 - y / canvas.height // 0 = near you, 1 = far away (the top of the picture is the far end)
+    const fade = Math.min(1, far / 0.12) * Math.min(1, (1 - far) / 0.35)
+    // most glints near the middle line, fewer toward the sides
+    const spread = (random() + random() + random() - 1.5) / 1.5
+    const x = 64 + spread * 60
+    const alpha = fade * (1 - Math.abs(spread)) * (0.25 + random() * 0.6)
+    ctx.fillStyle = `rgba(220, 228, 255, ${alpha})`
+    ctx.fillRect(x - 3 - random() * 10, y, 6 + random() * 20, 1 + random() * 2)
+  }
+  pathTexture = new THREE.CanvasTexture(canvas)
+  pathTexture.colorSpace = THREE.SRGBColorSpace
+  return pathTexture
+}
+
 // Sky dome, clouds, and (at night) stars and the moon. time: settings from timeOfDay.js, moon: where it is (maps.js)
 export function SkyAndClouds({ time, low, moon }) {
   const stars = useMemo(() => {
