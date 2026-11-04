@@ -3,6 +3,10 @@
 Tambay, laro at kwentuhan kasama ang tropa. A 3D street in Taytay you can walk around with friends:
 chat, voice, pickleball with Edson, and your own character. (From the maker of Kasama.)
 
+![Katropa character creator](katropa-screenshot.jpg)
+
+**Play online:** https://katropa.vercel.app
+
 There are three places (pick one on the start screen under **Saan tayo?**, or later with **👥 Katropa → Pumunta sa**):
 - **Ang Plaza**: where the story starts (see *108 Katropa* below).
 - **Taytay (TNLF)**: the street at Taytay New Life Fellowship, with Edson and pickleball.
